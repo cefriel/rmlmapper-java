@@ -179,6 +179,10 @@ public class Utils {
         return location.startsWith("https://") || location.startsWith("http://");
     }
 
+    public static boolean isInputStream(String location) {
+        return location.startsWith("is://");
+    }
+
     public static List<Term> getSubjectsFromQuads(List<Quad> quads) {
         ArrayList<Term> subjects = new ArrayList<>();
 

@@ -10,6 +10,7 @@ import be.ugent.rml.term.NamedNode;
 import be.ugent.rml.term.Term;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +26,16 @@ public class RecordsFactory {
     private Map<String, ReferenceFormulationRecordFactory> referenceFormulationRecordFactoryMap;
 
     public RecordsFactory(String basePath) {
-        accessFactory = new AccessFactory(basePath);
+        accessFactory = new AccessFactory(basePath, null);
+        init();
+    }
+
+    public RecordsFactory(String basePath, Map<String, InputStream> inputStreamsMap) {
+        accessFactory = new AccessFactory(basePath, inputStreamsMap);
+        init();
+    }
+
+    private void init() {
         recordCache = new HashMap<>();
 
         referenceFormulationRecordFactoryMap = new HashMap<>();
@@ -164,5 +174,9 @@ public class RecordsFactory {
         });
 
         return hash[0];
+    }
+
+    public void cleanRecordCache() {
+        recordCache = new HashMap<>();
     }
 }
