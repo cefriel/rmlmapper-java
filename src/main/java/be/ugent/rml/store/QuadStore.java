@@ -80,6 +80,14 @@ public abstract class QuadStore {
     public abstract List<Quad> getQuads(Term subject, Term predicate, Term object, Term graph);
 
     /**
+     * Add namespace to the store.
+     *
+     * @param prefix Prefix of namespace to be added
+     * @param name IRI of namespace to be added
+     */
+    public abstract void addNamespace(String prefix, String name);
+
+    /**
      * Copy namespaces between stores. Used in retaining the prefixes in the mapping file in the output.
      * TODO define general Namespace class to use between QuadStore instances
      *
