@@ -9,6 +9,7 @@ import be.ugent.rml.records.RecordsFactory;
 import be.ugent.rml.store.SimpleQuadStore;
 import be.ugent.rml.term.ProvenancedQuad;
 import be.ugent.rml.store.QuadStore;
+import be.ugent.rml.store.Quad;
 import be.ugent.rml.term.NamedNode;
 import be.ugent.rml.term.ProvenancedTerm;
 import be.ugent.rml.term.Term;
@@ -34,6 +35,8 @@ public class Executor {
     private static int blankNodeCounter = 0;
     private HashMap<Term, Mapping> mappings;
     private String baseIRI;
+    private boolean noCache;
+    private boolean ordered;
 
     public Executor(QuadStore rmlStore, RecordsFactory recordsFactory, String baseIRI) throws Exception {
         this(rmlStore, recordsFactory, null, null, baseIRI);
@@ -59,6 +62,13 @@ public class Executor {
         }
     }
 
+    public void setNoCache(boolean flag) {
+        this.noCache = flag;
+    }
+    public void setOrdered(boolean flag) {
+        this.ordered = flag;
+    }
+
     public QuadStore execute(List<Term> triplesMaps, boolean removeDuplicates, MetadataGenerator metadataGenerator) throws Exception {
 
         BiConsumer<ProvenancedTerm, PredicateObjectGraph> pogFunction;
@@ -78,79 +88,104 @@ public class Executor {
     }
 
     public QuadStore executeWithFunction(List<Term> triplesMaps, boolean removeDuplicates, BiConsumer<ProvenancedTerm, PredicateObjectGraph> pogFunction) throws Exception {
-        //check if TriplesMaps are provided
+        // Check if TriplesMaps are provided
         if (triplesMaps == null || triplesMaps.isEmpty()) {
             triplesMaps = this.initializer.getTriplesMaps();
         }
 
-        //we execute every mapping
-        for (Term triplesMap : triplesMaps) {
-            Mapping mapping = this.mappings.get(triplesMap);
+        // Order triples map by source to help cleaning the cache and preserving memory
+        // Mainly useful when no join conditions
+        Map<String, List<Term>> orderedTriplesMaps;
+        if (ordered) {
+            orderedTriplesMaps = getOrderedTriplesMaps(triplesMaps);
+        } else {
+            orderedTriplesMaps = new HashMap<>();
+            orderedTriplesMaps.put("all", triplesMaps);
+        }
 
-            List<Record> records = this.getRecords(triplesMap);
+        //we execute every mapping ordered by source
+        for(String key : orderedTriplesMaps.keySet()) {
+            triplesMaps = orderedTriplesMaps.get(key);
+            logger.info("Logical Source [key: " + key + ", size: " + triplesMaps.size() + "]");
+            for (Term triplesMap : triplesMaps) {
+                Mapping mapping = this.mappings.get(triplesMap);
 
-            for (int j = 0; j < records.size(); j++) {
-                Record record = records.get(j);
-                ProvenancedTerm subject = getSubject(triplesMap, mapping, record, j);
+                List<Record> records;
+                try {
+                    records = this.getRecords(triplesMap);
+                } catch (IOException e) {
+                    logger.error("Source [" + key + "] not found. Mapping skipped.");
+                    continue;
+                }
 
-                // If we have subject and it's a named node,
-                // we validate it and make it an absolute IRI if needed.
-                if (subject != null && subject.getTerm() instanceof NamedNode) {
-                    String iri = subject.getTerm().getValue();
+                for (int j = 0; j < records.size(); j++) {
+                    Record record = records.get(j);
+                    ProvenancedTerm subject = getSubject(triplesMap, mapping, record, j);
 
-                    // Is the IRI valid?
-                    if (!Utils.isValidIRI(iri)) {
-                        logger.error("The subject \"" + iri + "\" is not a valid IRI. Skipped.");
-                        subject = null;
+                    // If we have subject and it's a named node,
+                    // we validate it and make it an absolute IRI if needed.
+                    if (subject != null && subject.getTerm() instanceof NamedNode) {
+                        String iri = subject.getTerm().getValue();
 
-                    // Is the IRI relative?
-                    } else if (Utils.isRelativeIRI(iri)) {
-
-                        // Check the base IRI to see if we can use it to turn the IRI into an absolute one.
-                        if (this.baseIRI == null) {
-                            logger.error("The base IRI is null, so relative IRI of subject cannot be turned in to absolute IRI. Skipped.");
+                        // Is the IRI valid?
+                        if (!Utils.isValidIRI(iri)) {
+                            logger.error("The subject \"" + iri + "\" is not a valid IRI. Skipped.");
                             subject = null;
-                        } else {
-                            logger.debug("The IRI of subject is made absolute via base IRI.");
-                            iri = this.baseIRI + iri;
 
-                            // Check if the new absolute IRI is valid.
-                            if (Utils.isValidIRI(iri)) {
-                                subject = new ProvenancedTerm(new NamedNode(iri), subject.getMetadata());
+                            // Is the IRI relative?
+                        } else if (Utils.isRelativeIRI(iri)) {
+
+                            // Check the base IRI to see if we can use it to turn the IRI into an absolute one.
+                            if (this.baseIRI == null) {
+                                logger.error("The base IRI is null, so relative IRI of subject cannot be turned in to absolute IRI. Skipped.");
+                                subject = null;
                             } else {
-                                logger.error("The subject \"" + iri + "\" is not a valid IRI. Skipped.");
+                                logger.debug("The IRI of subject is made absolute via base IRI.");
+                                iri = this.baseIRI + iri;
+
+                                // Check if the new absolute IRI is valid.
+                                if (Utils.isValidIRI(iri)) {
+                                    subject = new ProvenancedTerm(new NamedNode(iri), subject.getMetadata());
+                                } else {
+                                    logger.error("The subject \"" + iri + "\" is not a valid IRI. Skipped.");
+                                }
                             }
                         }
                     }
-                }
 
-                final ProvenancedTerm finalSubject = subject;
+                    final ProvenancedTerm finalSubject = subject;
 
-                //TODO validate subject or check if blank node
-                if (subject != null) {
-                    List<ProvenancedTerm> subjectGraphs = new ArrayList<>();
+                    //TODO validate subject or check if blank node
+                    if (subject != null) {
+                        List<ProvenancedTerm> subjectGraphs = new ArrayList<>();
 
-                    mapping.getGraphMappingInfos().forEach(mappingInfo -> {
-                        List<Term> terms = null;
+                        mapping.getGraphMappingInfos().forEach(mappingInfo -> {
+                            List<Term> terms = null;
 
-                        try {
-                            terms = mappingInfo.getTermGenerator().generate(record);
-                        } catch (Exception e) {
-                            //todo be more nice and gentle
-                            e.printStackTrace();
-                        }
-
-                        terms.forEach(term -> {
-                            if (!term.equals(new NamedNode(NAMESPACES.RR + "defaultGraph"))) {
-                                subjectGraphs.add(new ProvenancedTerm(term));
+                            try {
+                                terms = mappingInfo.getTermGenerator().generate(record);
+                            } catch (Exception e) {
+                                //todo be more nice and gentle
+                                e.printStackTrace();
                             }
+
+                            terms.forEach(term -> {
+                                if (!term.equals(new NamedNode(NAMESPACES.RR + "defaultGraph"))) {
+                                    subjectGraphs.add(new ProvenancedTerm(term));
+                                }
+                            });
                         });
-                    });
 
-                    List<PredicateObjectGraph> pogs = this.generatePredicateObjectGraphs(mapping, record, subjectGraphs);
+                        List<PredicateObjectGraph> pogs = this.generatePredicateObjectGraphs(mapping, record, subjectGraphs);
 
-                    pogs.forEach(pog -> pogFunction.accept(finalSubject, pog));
+                        pogs.forEach(pog -> pogFunction.accept(finalSubject, pog));
+                    }
                 }
+            }
+            if(ordered) {
+                recordsFactory.cleanRecordCache();
+                subjectCache = new HashMap<>();
+                recordsHolders = new HashMap<>();
             }
         }
 
@@ -159,6 +194,36 @@ public class Executor {
         }
 
         return resultingQuads;
+    }
+
+    private Map<String, List<Term>> getOrderedTriplesMaps(List<Term> triplesMaps) {
+        Map<String, List<Term>> orderedTriplesMaps = new HashMap<>();
+        for (Term triplesMap : triplesMaps) {
+            List<Term> logicalSources = Utils.getObjectsFromQuads(rmlStore.getQuads(triplesMap, new NamedNode(NAMESPACES.RML + "logicalSource"), null));
+            if (logicalSources.isEmpty()) {
+                orderedTriplesMaps.get("others").add(triplesMap);
+                continue;
+            }
+            Term logicalSource = logicalSources.get(0);
+            List<Quad> quads = rmlStore.getQuads(logicalSource, new NamedNode(NAMESPACES.RML + "source"), null);
+            if (quads.isEmpty()) {
+                orderedTriplesMaps.get("others").add(triplesMap);
+                continue;
+            }
+            String source = quads.get(0).getObject().getValue();
+            if (source == null) {
+                orderedTriplesMaps.get("others").add(triplesMap);
+                continue;
+            }
+            if(orderedTriplesMaps.containsKey(source))
+                orderedTriplesMaps.get(source).add(triplesMap);
+            else{
+                List<Term> terms = new ArrayList<>();
+                terms.add(triplesMap);
+                orderedTriplesMaps.put(source, terms);
+            }
+        }
+        return orderedTriplesMaps;
     }
 
     public QuadStore execute(List<Term> triplesMaps) throws Exception {
@@ -229,6 +294,27 @@ public class Executor {
 
 
         if (subject != null && predicate != null & object != null) {
+            if (object.getTerm() instanceof NamedNode) {
+                String iri = ((NamedNode) object.getTerm()).getValue();
+                if (Utils.isRelativeIRI(iri)) {
+                    // Check the base IRI to see if we can use it to turn the IRI into an absolute one.
+                    if (this.baseIRI == null) {
+                        logger.error("The base IRI is null, so relative IRI of object cannot be turned in to absolute IRI. Skipped.");
+                        return;
+                    } else {
+                        logger.debug("The IRI of object is made absolute via base IRI.");
+                        iri = this.baseIRI + iri;
+
+                        // Check if the new absolute IRI is valid.
+                        if (Utils.isValidIRI(iri)) {
+                            object = new ProvenancedTerm(new NamedNode(iri), object.getMetadata());
+                        } else {
+                            logger.error("The object \"" + iri + "\" is not a valid IRI. Skipped.");
+                            return;
+                        }
+                    }
+                }
+            }
             this.resultingQuads.addQuad(subject.getTerm(), predicate.getTerm(), object.getTerm(), g);
         }
     }
@@ -290,6 +376,13 @@ public class Executor {
     }
 
     private ProvenancedTerm getSubject(Term triplesMap, Mapping mapping, Record record, int i) throws Exception {
+        if (noCache) {
+            List<Term> nodes = mapping.getSubjectMappingInfo().getTermGenerator().generate(record);
+            if (!nodes.isEmpty())
+                return new ProvenancedTerm(nodes.get(0), new Metadata(triplesMap, mapping.getSubjectMappingInfo().getTerm()));
+            return null;
+        }
+
         if (!this.subjectCache.containsKey(triplesMap)) {
             this.subjectCache.put(triplesMap, new HashMap<Integer, ProvenancedTerm>());
         }
@@ -323,10 +416,13 @@ public class Executor {
     }
 
     private List<Record> getRecords(Term triplesMap) throws IOException {
+        if (noCache)
+            return this.recordsFactory.createRecords(triplesMap, this.rmlStore);
+
         if (!this.recordsHolders.containsKey(triplesMap)) {
             this.recordsHolders.put(triplesMap, this.recordsFactory.createRecords(triplesMap, this.rmlStore));
         }
-
+        
         return this.recordsHolders.get(triplesMap);
     }
 
