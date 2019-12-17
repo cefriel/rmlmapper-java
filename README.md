@@ -1,4 +1,4 @@
-# RMLMapper Cefriel fork
+# RMLMapper - Cefriel fork
 
 The RMLMapper execute RML rules to generate Linked Data.
 It is a Java library, which is available via the command line ([API docs online](https://rmlio.github.io/rmlmapper-java/apidocs/)).
