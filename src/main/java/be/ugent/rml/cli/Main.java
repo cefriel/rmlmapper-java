@@ -9,12 +9,15 @@ import be.ugent.rml.functions.lib.IDLabFunctions;
 import be.ugent.rml.metadata.MetadataGenerator;
 import be.ugent.rml.records.RecordsFactory;
 import be.ugent.rml.store.QuadStore;
+import be.ugent.rml.store.RDF4JDatabase;
 import be.ugent.rml.store.RDF4JStore;
 import be.ugent.rml.store.SimpleQuadStore;
 import be.ugent.rml.term.NamedNode;
 import be.ugent.rml.term.Term;
 import ch.qos.logback.classic.Level;
 import org.apache.commons.cli.*;
+import org.eclipse.rdf4j.model.Namespace;
+import org.eclipse.rdf4j.model.impl.SimpleNamespace;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,7 +114,47 @@ public class Main {
                 .desc("username of the database when using R2RML rules")
                 .hasArg()
                 .build();
-
+        Option triplesStoreOption = Option.builder("ts")
+                .longOpt("triplesStore")
+                .desc("Address to reach the triples store. If specified produced triples are also written at this address." +
+                        "Also repositoryId option -r should be provided.")
+                .hasArg()
+                .build();
+        Option repositoryIdOption = Option.builder("r")
+                .longOpt("repositoryId")
+                .desc("Repository Id related to the triples store." +
+                        "Also triplesStore option -ts should be provided.")
+                .hasArg()
+                .build();
+        Option batchSizeOption = Option.builder("b")
+                .longOpt("batchSize")
+                .desc("Batch size, i.e., number of statements for each update to the triples store. " +
+                        "If -inc is set it is used as batch size also for incremental updates.")
+                .hasArg()
+                .build();
+        Option incrementalUpdateOption = Option.builder("inc")
+                .longOpt("incrementalUpdate")
+                .desc("Incremental update option to incrementally load triples in the database.")
+                .build();
+        Option noCacheOption = Option.builder("n")
+                .longOpt("noCache")
+                .desc("Do not use records and subject cache in the executor.")
+                .build();
+        Option orderedOption = Option.builder("ord")
+                .longOpt("ordered")
+                .desc("Mapping execution is ordered by logical source and caches are cleaned after each logical source." +
+                        "This option improves memory consumption and it is advisable if no join condition exist among mappings.")
+                .build();
+        Option baseIRIOption = Option.builder("iri")
+                .longOpt("baseIRI")
+                .desc("Specify a base IRI for relative IRIs.")
+                .hasArg()
+                .build();
+        Option baseIRIPrefixOption = Option.builder("pb")
+                .longOpt("prefixBaseIRI")
+                .desc("Specify a prefix for the base IRI used for relative IRIs.")
+                .hasArg()
+                .build();
         options.addOption(mappingdocOption);
         options.addOption(outputfileOption);
         options.addOption(functionfileOption);
@@ -126,6 +169,14 @@ public class Main {
         options.addOption(jdbcDSNOption);
         options.addOption(passwordOption);
         options.addOption(usernameOption);
+        options.addOption(triplesStoreOption);
+        options.addOption(repositoryIdOption);
+        options.addOption(batchSizeOption);
+        options.addOption(incrementalUpdateOption);
+        options.addOption(noCacheOption);
+        options.addOption(orderedOption);
+        options.addOption(baseIRIOption);
+        options.addOption(baseIRIPrefixOption);
 
         CommandLineParser parser = new DefaultParser();
         try {
@@ -148,6 +199,10 @@ public class Main {
                 setLoggerLevel(Level.DEBUG);
             } else {
                 setLoggerLevel(Level.ERROR);
+                Logger databaseLog = LoggerFactory.getLogger(RDF4JDatabase.class);
+                ((ch.qos.logback.classic.Logger) databaseLog).setLevel(Level.DEBUG);
+                Logger infoLog = LoggerFactory.getLogger(Executor.class);
+                ((ch.qos.logback.classic.Logger) infoLog).setLevel(Level.INFO);
             }
 
             String[] mOptionValue = getOptionValues(mappingdocOption, lineArgs, configFile);
@@ -188,11 +243,20 @@ public class Main {
 
                 String outputFormat = getPriorityOptionValue(serializationFormatOption, lineArgs, configFile);
                 QuadStore outputStore;
+                boolean tripleStore = lineArgs.hasOption("ts") && lineArgs.hasOption("r");
 
                 if (outputFormat == null || outputFormat.equals("nquads") || outputFormat.equals("hdt")) {
                     outputStore = new SimpleQuadStore();
                 } else {
                     outputStore = new RDF4JStore();
+                }
+
+                if (tripleStore) {
+                    if (lineArgs.hasOption("b"))
+                        outputStore = new RDF4JDatabase(lineArgs.getOptionValue("ts"), lineArgs.getOptionValue("r"),
+                                Integer.parseInt(lineArgs.getOptionValue("b")), lineArgs.hasOption("inc"));
+                    else
+                        outputStore = new RDF4JDatabase(lineArgs.getOptionValue("ts"), lineArgs.getOptionValue("r"), 0, false);
                 }
 
                 Executor executor;
@@ -250,7 +314,19 @@ public class Main {
                         .collect(Collectors.toList());
                 is = new SequenceInputStream(Collections.enumeration(lis));
 
-                executor = new Executor(rmlStore, factory, functionLoader, outputStore, Utils.getBaseDirectiveTurtle(is));
+                String baseIRI;
+                if (lineArgs.hasOption("iri")) {
+                    baseIRI = lineArgs.getOptionValue("iri");
+                    logger.debug("Base IRI set to value: " + lineArgs.getOptionValue("iri"));
+                }
+                else
+                    baseIRI = Utils.getBaseDirectiveTurtle(is);
+
+                executor = new Executor(rmlStore, factory, functionLoader, outputStore, baseIRI);
+                if (lineArgs.hasOption("n"))
+                    executor.setNoCache(true);
+                if (lineArgs.hasOption("ord"))
+                    executor.setOrdered(true);
 
                 List<Term> triplesMaps = new ArrayList<>();
 
@@ -292,7 +368,23 @@ public class Main {
                         // Write even if no results
                     }
                     result.copyNameSpaces(rmlStore);
-                    writeOutput(result, outputFile, outputFormat);
+
+                    if (lineArgs.hasOption("iri"))
+                        if (lineArgs.hasOption("pb"))
+                            result.addNamespace(lineArgs.getOptionValue("pb"), lineArgs.getOptionValue("iri"));
+                        else
+                            result.addNamespace("base", lineArgs.getOptionValue("iri"));
+
+                    //If --inc option is set, triples are discarded once written to the db
+                    if (lineArgs.hasOption("o") && !lineArgs.hasOption("inc"))
+                        writeOutput(result, outputFile, outputFormat);
+                    //Write quads
+                    if (tripleStore) {
+                        ((RDF4JDatabase) result).writeToDB();
+                        ((RDF4JDatabase) result).shutDown();
+                    }
+
+
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                 }
