@@ -118,7 +118,7 @@ public class Arguments_Test extends TestCore {
 
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         System.setOut(new PrintStream(stdout));
-        Main.main(("-v -f " + functionsFilePath + " -m " + mappingFilePath).split(" "), cwd);
+        Main.main(("-v -f " + functionsFilePath + " -m " + mappingFilePath + " -o stdout").split(" "), cwd);
 
         assertThat(stdout.toString(), containsString("<http://example.com/10> <http://xmlns.com/foaf/0.1/name> \"Venus\\\"\"."));
         assertThat(stdout.toString(), containsString("<http://example.com/10> <http://example.com/id> \"10\"."));

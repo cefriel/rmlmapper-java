@@ -479,7 +479,9 @@ public class Main {
             String doneMessage = null;
 
             //if output file provided, write to triples output file
-            if (outputFile != null) {
+            if (outputFile == null || outputFile.equals("stdout")) {
+                out = new BufferedWriter(new OutputStreamWriter(System.out));
+            } else {
                 targetFile = new File(outputFile);
                 logger.info("Writing quads to " + targetFile.getPath() + "...");
 
@@ -490,9 +492,6 @@ public class Main {
                 doneMessage = "Writing to " + targetFile.getPath() + " is done.";
 
                 out = new BufferedWriter(new FileWriter(targetFile));
-
-            } else {
-                out = new BufferedWriter(new OutputStreamWriter(System.out));
             }
 
             store.write(out, format);
