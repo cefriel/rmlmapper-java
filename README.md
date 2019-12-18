@@ -10,7 +10,7 @@ This repository contains a fork of the RMLio/rmlmapper-java repository maintaine
 - New options:
     - `--triplesStore`: Address to reach the triples store. If specified produced triples are written at this address.
     - `--repositoryId`: Repository Id related to the triples store. Also triplesStore option -ts should be provided.     
-    - `--incrementalUpdate`: Incremental update option to incrementally load triples in the database while performing mapping procedure. A multi-threading approach is used to manage batches.
+    - `--incrementalUpdate`: Incremental update option to incrementally load triples in the database while performing mapping procedure. A multi-threading approach is used to manage batches. Note that if a triples store is used duplicated triples are automatically removed, therefore, even if incremental updates are constant in size the triples store size may not grow linearly.
     - `--batchSiz`e: Batch size, i.e., number of statements for each update loading file to the triples store. If -inc is set it is used as batch size also for incremental updates.
     - `--noCache`: Do not use subjects and records caches in the executor.
     - `--ordered`: Mapping execution is ordered by logical source and records caches are cleaned after each logical source. This option improves memory consumption and it is advisable if no join condition exist among mappings.
@@ -40,6 +40,5 @@ options:
                                   written at this address. Also option -r should be provided
  -v,--verbose                     Show more details in debugging output
  ```
-Note that if a triples store is used duplicated triples are automatically removed, therefore, even if incremental updates are constant in size the triples store size may not grow linearly.
 
 
