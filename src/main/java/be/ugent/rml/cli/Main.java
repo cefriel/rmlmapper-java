@@ -16,8 +16,6 @@ import be.ugent.rml.term.NamedNode;
 import be.ugent.rml.term.Term;
 import ch.qos.logback.classic.Level;
 import org.apache.commons.cli.*;
-import org.eclipse.rdf4j.model.Namespace;
-import org.eclipse.rdf4j.model.impl.SimpleNamespace;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -243,7 +241,8 @@ public class Main {
 
                 String outputFormat = getPriorityOptionValue(serializationFormatOption, lineArgs, configFile);
                 QuadStore outputStore;
-                boolean tripleStore = lineArgs.hasOption("ts") && lineArgs.hasOption("r");
+                boolean tripleStore = checkOptionPresence(triplesStoreOption, lineArgs, configFile)
+                        && checkOptionPresence(repositoryIdOption, lineArgs, configFile);
 
                 if (outputFormat == null || outputFormat.equals("nquads") || outputFormat.equals("hdt")) {
                     outputStore = new SimpleQuadStore();
@@ -252,11 +251,14 @@ public class Main {
                 }
 
                 if (tripleStore) {
-                    if (lineArgs.hasOption("b"))
-                        outputStore = new RDF4JDatabase(lineArgs.getOptionValue("ts"), lineArgs.getOptionValue("r"),
-                                Integer.parseInt(lineArgs.getOptionValue("b")), lineArgs.hasOption("inc"));
+                    String ts = getPriorityOptionValue(triplesStoreOption, lineArgs, configFile);
+                    String repoID = getPriorityOptionValue(repositoryIdOption, lineArgs, configFile);
+                    if (checkOptionPresence(batchSizeOption, lineArgs, configFile))
+                        outputStore = new RDF4JDatabase(ts, repoID,
+                                Integer.parseInt(getPriorityOptionValue(batchSizeOption, lineArgs, configFile)),
+                                checkOptionPresence(incrementalUpdateOption, lineArgs, configFile));
                     else
-                        outputStore = new RDF4JDatabase(lineArgs.getOptionValue("ts"), lineArgs.getOptionValue("r"), 0, false);
+                        outputStore = new RDF4JDatabase(ts, repoID, 0, false);
                 }
 
                 Executor executor;
@@ -315,17 +317,17 @@ public class Main {
                 is = new SequenceInputStream(Collections.enumeration(lis));
 
                 String baseIRI;
-                if (lineArgs.hasOption("iri")) {
-                    baseIRI = lineArgs.getOptionValue("iri");
+                if (checkOptionPresence(baseIRIOption, lineArgs, configFile)) {
+                    baseIRI = getPriorityOptionValue(baseIRIOption, lineArgs, configFile);
                     logger.debug("Base IRI set to value: " + lineArgs.getOptionValue("iri"));
                 }
                 else
                     baseIRI = Utils.getBaseDirectiveTurtle(is);
 
                 executor = new Executor(rmlStore, factory, functionLoader, outputStore, baseIRI);
-                if (lineArgs.hasOption("n"))
+                if (checkOptionPresence(noCacheOption, lineArgs, configFile))
                     executor.setNoCache(true);
-                if (lineArgs.hasOption("ord"))
+                if (checkOptionPresence(orderedOption, lineArgs, configFile))
                     executor.setOrdered(true);
 
                 List<Term> triplesMaps = new ArrayList<>();
@@ -369,14 +371,15 @@ public class Main {
                     }
                     result.copyNameSpaces(rmlStore);
 
-                    if (lineArgs.hasOption("iri"))
-                        if (lineArgs.hasOption("pb"))
-                            result.addNamespace(lineArgs.getOptionValue("pb"), lineArgs.getOptionValue("iri"));
+                    if (checkOptionPresence(baseIRIOption, lineArgs, configFile))
+                        if (checkOptionPresence(baseIRIPrefixOption, lineArgs, configFile))
+                            result.addNamespace(getPriorityOptionValue(baseIRIPrefixOption, lineArgs, configFile), baseIRI);
                         else
-                            result.addNamespace("base", lineArgs.getOptionValue("iri"));
+                            result.addNamespace("base", baseIRI);
 
                     //If --inc option is set, triples are discarded once written to the db
-                    if (lineArgs.hasOption("o") && !lineArgs.hasOption("inc"))
+                    if (checkOptionPresence(outputfileOption, lineArgs, configFile) &&
+                            !checkOptionPresence(incrementalUpdateOption, lineArgs, configFile))
                         writeOutput(result, outputFile, outputFormat);
                     //Write quads
                     if (tripleStore) {
