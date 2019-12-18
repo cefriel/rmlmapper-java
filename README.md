@@ -1,6 +1,6 @@
 # RML Mapper - Cefriel fork
 
-This repository contains a fork of the RMLio/rmlmapper-java repository maintained by Cefriel Knowledge Technologies team to support solutions for semantic data conversion, e.g. [Chimera](https://github.com/cefriel/chimera) converter.
+This repository contains a fork of the RMLio/rmlmapper-java repository maintained by Cefriel Knowledge Technologies team to support the [Chimera](https://github.com/cefriel/chimera) solution for semantic data conversion.
 
 ### Changelog ###
 - A new QuadStore subclass is defined,  `RDF4JDatabase`, targeting an HTTPRepository for rdf4j 
