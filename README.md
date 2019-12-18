@@ -19,9 +19,9 @@ This repository contains a fork of the RMLio/rmlmapper-java repository maintaine
 - Changed `-o` option behaviour. If -o option is not set default behaviour is do nothing. To print to stdout it is required to use `-o stdout`. To save to file the `-o` option should be set, it can be combined with `-ts` and `-r` options if `-inc` is not set.
 
 ### `rmlmapper-cefriel.jar` ###
-This is the intended usage of the `rmlmapper.jar`.
+This is the intended usage of the `rmlmapper-cefriel.jar`.
 ```
-usage: java -jar rmlmapper-snap.jar <options>
+usage: java -jar rmlmapper-cefriel.jar <options>
 options:
  -b,--batchSize <arg>             Batch size, i.e., number of statements for each update loading file to the triples store. 
                                   If -inc is set it is used as batch size also for incremental updates. 
