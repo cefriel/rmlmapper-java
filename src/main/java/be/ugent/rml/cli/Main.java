@@ -53,7 +53,7 @@ public class Main {
         Option outputfileOption = Option.builder("o")
                 .longOpt("outputfile")
                 .hasArg()
-                .desc("path to output file (default: stdout)")
+                .desc("path to output file (-o stdout can be used for debugging)")
                 .build();
         Option functionfileOption = Option.builder("f")
                 .longOpt("functionfile")
