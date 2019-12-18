@@ -3,14 +3,14 @@
 This repository contains a fork of the RMLio/rmlmapper-java repository maintained by Cefriel Knowledge Technologies team to support the [Chimera](https://github.com/cefriel/chimera) solution for semantic data conversion.
 
 ### Changelog ###
-- A new QuadStore subclass is defined,  `RDF4JDatabase`, targeting an HTTPRepository for rdf4j 
+- A new QuadStore subclass is defined,  `RDF4JDatabase`, targeting an HTTPRepository for rdf4j
 - Empty strings in a CSV file are not considered in mappings (to avoid having ?s ?p "" kind of triples)
 - Base IRI is added to relative IRIs also for objects
 - All namespaces in the mappings file and the one related to the base IRI are added to the output model/to the triples store
 - New options:
     - `--triplesStore`: Address to reach the triples store. If specified produced triples are written at this address.
     - `--repositoryId`: Repository Id related to the triples store. Also triplesStore option -ts should be provided.     
-    - `--incrementalUpdate`: Incremental update option to incrementally load triples in the database while performing mapping procedure.
+    - `--incrementalUpdate`: Incremental update option to incrementally load triples in the database while performing mapping procedure. A multi-threading approach is used to manage batches.
     - `--batchSiz`e: Batch size, i.e., number of statements for each update loading file to the triples store. If -inc is set it is used as batch size also for incremental updates.
     - `--noCache`: Do not use subjects and records caches in the executor.
     - `--ordered`: Mapping execution is ordered by logical source and records caches are cleaned after each logical source. This option improves memory consumption and it is advisable if no join condition exist among mappings.
@@ -32,7 +32,7 @@ options:
  -n,--noCache                     Do not use subjects and records caches in the executor.
  -ord,--ordered                   Mapping execution is ordered by logical source and caches are cleaned after each logical source.                                         This option improves memory consumption and it is advisable if no join condition exist among mappings.
  -o,--outputfile <arg>            Path to output file (-o stdout can be used for debugging)
- -p,--prefixBaseIRI <arg>         Specify a prefix for the base IRI used for relative IRIs
+ -pb,--prefixBaseIRI <arg>         Specify a prefix for the base IRI used for relative IRIs
  -r,--repositoryId <arg>          Repository Id related to the triples store. Also option -ts
                                   should be provided
  -s,--serialization <arg>         Serialization format (nquads (default), turtle, trig, trix, jsonld, hdt)
