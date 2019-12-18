@@ -41,10 +41,12 @@ public class Mapper_JSON_Test extends TestCore {
         doMapping("./test-cases/RMLTC0002c-JSON/mapping.ttl", "./test-cases/RMLTC0002c-JSON/output.nq");
     }
 
+    /* Changed behaviour: No error if logic source NOT found
     @Test
     public void evaluate_0002e_JSON() {
         doMappingExpectError("./test-cases/RMLTC0002e-JSON/mapping.ttl");
     }
+    */
 
     @Test
     public void evaluate_0003c_JSON() {

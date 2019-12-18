@@ -33,10 +33,12 @@ public class Mapper_CSV_Test extends TestCore {
         doMapping("./test-cases/RMLTC0002c-CSV/mapping.ttl", "./test-cases/RMLTC0002c-CSV/output.nq");
     }
 
+    /* Changed behaviour: No error if logic source NOT found
     @Test
     public void evaluate_0002e_CSV() {
         doMappingExpectError("./test-cases/RMLTC0002e-CSV/mapping.ttl");
     }
+    */
 
     @Test
     public void evaluate_0003c_CSV() {

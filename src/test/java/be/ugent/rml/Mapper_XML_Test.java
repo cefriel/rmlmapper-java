@@ -33,10 +33,12 @@ public class Mapper_XML_Test extends TestCore {
         doMapping("./test-cases/RMLTC0002c-XML/mapping.ttl", "./test-cases/RMLTC0002c-XML/output.nq");
     }
 
+    /* Changed behaviour: No error if logic source NOT found
     @Test
     public void evaluate_0002e_XML() {
         doMappingExpectError("./test-cases/RMLTC0002e-XML/mapping.ttl");
     }
+    */
 
     @Test
     public void evaluate_0003c_XML() {
