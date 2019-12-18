@@ -114,7 +114,7 @@ public class Executor {
                 try {
                     records = this.getRecords(triplesMap);
                 } catch (IOException e) {
-                    logger.error("Source [" + key + "] not found. Mapping skipped.");
+                    logger.error("Source [" + key + "] not found or not accessible. Mapping skipped.");
                     continue;
                 }
 
