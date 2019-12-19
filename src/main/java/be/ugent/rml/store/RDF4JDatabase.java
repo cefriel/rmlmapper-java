@@ -29,6 +29,10 @@ import java.util.regex.Pattern;
 
 public class RDF4JDatabase extends QuadStore {
 
+    private static final int CORE_POOL_SIZE = 4;
+    private static final int MAXIMUM_POOL_SIZE = 5;
+    private static final int KEEP_ALIVE_MINUTES = 10;
+
     private Repository repo;
     private int batchSize;
     private boolean incremental;
@@ -47,8 +51,8 @@ public class RDF4JDatabase extends QuadStore {
         repo = new HTTPRepository(dbAddress, repositoryID);
         repo.init();
         BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
-        executor = new ThreadPoolExecutor(4, 5,
-                10, TimeUnit.MINUTES, workQueue);
+        executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE,
+                KEEP_ALIVE_MINUTES, TimeUnit.MINUTES, workQueue);
         this.batchSize = batchSize;
         this.incremental = incremental;
         triplesWithGraphCounter = 0;
@@ -58,7 +62,7 @@ public class RDF4JDatabase extends QuadStore {
 
     @Override
     public void removeDuplicates() {
-        // Model already simplifies duplicated quads
+        // Triple Store already simplifies duplicated quads
     }
 
     @Override
@@ -68,7 +72,7 @@ public class RDF4JDatabase extends QuadStore {
         Value o = getFilterObject(object);
         Resource g = getFilterGraph(graph);
 
-        model.add(s, p, o); //,g);
+        model.add(s, p, o); // Discarded now ,g);
 
         if (incremental && model.size() >= batchSize)
             writeToDB();
