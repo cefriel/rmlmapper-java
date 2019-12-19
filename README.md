@@ -12,12 +12,12 @@ This repository contains a fork of the [RMLio/rmlmapper-java](https://github.com
 
 #### InputStream as Logical Sources ####
 - It is possible to target InputStream as logical sources with identifier  `is://<label>` in the RML file
-- InputStreams that are referenced in the RML file should be passed as parameter to the RecordsFactory constructor using a map to correlate the `<label>` with the actual InputStream
+- InputStreams that are referenced in the RML file should be passed as a parameter to the RecordsFactory constructor using a map to correlate the `<label>` with the actual InputStream
 
 #### Base IRI and Prefix Base IRI ####
 - Base IRI can be provided also as an argument in cli.Main
 - Relative IRIs are allowed also for objects in generated triples. The base IRI is added, as for subjects, to build a valid IRI.
-- The namespace related to the base IRI is added to the output model/to the triple store. If a prefix for the base IRI is provided it is used to identify the base IRI, otherwise the `base:` prefix is used.
+- The namespace related to the base IRI is added to the output model/to the triple store. If a prefix for the base IRI is provided it is used to identify the base IRI, otherwise, the `base:` prefix is used.
 - New options:
     - `--baseIRI` and `--prefixBaseIRI`: To set base IRI and a related prefix (otherwise @base is parsed)
     
@@ -29,13 +29,13 @@ When the conversion is applied to huge datasets the bottleneck is often mainly r
 Given this information, we implemented a set of options to optimize performances of the lifting procedure in specific cases.
 
 ##### Triple Store communication #####
-If a Triple Store is used as output store some additional options can help improving performances. In case of huge materialized knowledge graphs and, to avoid flooding the triple store with a unique insert query, we created options to manage batch-size updates to the database. To reduce memory consumption the batch-size updates can be performed incrementally each time the number of triples produced reaches the batch-size. Activating this option, triples written to the triple store are discarded once completed the query removing data from memory. Duplicates elimination is guaranteed and demanded to the triple store. Requests to the Triple Store are done in multithreading to avoid stopping the mapping procedure. A fixed pool of threads is defined so that the number of concurrent queries is pre-defined.
+If a Triple Store is used as output store some additional options can help improve performances. In case of huge materialized knowledge graphs and, to avoid flooding the triple store with a unique insert query, we created options to manage batch-size updates to the database. To reduce memory consumption the batch-size updates can be performed incrementally each time the number of triples produced reaches the batch-size. Activating this option, triples written to the triple store are discarded once completed the query removing data from memory. Duplicates elimination is guaranteed and demanded to the triple store. Requests to the Triple Store are done in multithreading to avoid stopping the mapping procedure. A fixed pool of threads is defined so that the number of concurrent queries is pre-defined.
 - New options:
     - `--incrementalUpdate`: Incremental update option to incrementally load triples in the database while performing mapping procedure. A multi-threading approach is used to manage batches. Note that if a triples store is used duplicated triples are automatically removed, therefore, even if incremental updates are constant in size the triples store size may not grow linearly.
     - `--batchSize`: Batch size, i.e., number of statements for each update loading file to the triples store. If `-inc` is set it is used as batch size also for incremental updates.
     
-##### Mappings withouth join conditions #####
-If mappings have no or few join conditions some additional options can help improving performances. We add an option to avoid using subjects and record caches in the executor and, we tested it noticing that memory consumption lowers while no changes in execution time are observed. Moreover, to reduce even more the memory used during the execution we add an option to order the execution of TriplesMap by logical source, cleaning the records cache in RecordsFactory each time all TriplesMap related to a specific logical source are completed.
+##### Mappings without join conditions #####
+If mappings have no or few join conditions some additional options can help improve performances. We add an option to avoid using subjects and record caches in the executor and, we tested it noticing that memory consumption lowers while no changes in execution time are observed. Moreover, to reduce even more the memory used during the execution we add an option to order the execution of TriplesMap by logical source, cleaning the records cache in RecordsFactory each time all TriplesMap related to a specific logical source are completed.
 - New options:
     - `--noCache`: Do not use subjects and records caches in the executor.
     - `--ordered`: Mapping execution is ordered by logical source and records caches are cleaned after each logical source.
@@ -43,7 +43,7 @@ If mappings have no or few join conditions some additional options can help impr
 #### Other changes ####
 - Empty strings in a CSV file are not considered in mappings (to avoid having ?s ?p "" kind of triples)
 - If a logical source is not found, the procedure continues skipping the mapping and logging the event
-- Changed `-o` option behaviour. If -o option is not set default behaviour is do nothing. To print to stdout it is required to use `-o stdout`. To save to file the `-o` option should be set, it can be combined with `-ts` and `-r` options if `-inc` is not set.
+- Changed `-o` option behaviour. If -o option is not set, the default behaviour is do nothing. To print to stdout it is required to use `-o stdout`. To save to file the `-o` option should be set, it can be combined with `-ts` and `-r` options if `-inc` is not set.
 
 ### `rmlmapper-cefriel.jar` ###
 This is the intended usage of the `rmlmapper-cefriel.jar`.
