@@ -1,11 +1,11 @@
 # RML Mapper - Cefriel fork
 
-This repository contains a fork of the RMLio/rmlmapper-java repository maintained by Cefriel Knowledge Technologies team as a building block of the [Chimera](https://github.com/cefriel/chimera) solution for semantic data conversion.
+This repository contains a fork of the [RMLio/rmlmapper-java](https://github.com/RMLio/rmlmapper-java) repository maintained by Cefriel Knowledge Technologies team as a building block of the [Chimera](https://github.com/cefriel/chimera) solution for semantic data conversion.
 
 ### Changelog ###
 
 ##### Add support for RDF4J HTTP Repository #####
-- A new QuadStore subclass is defined,  `RDF4JDatabase`, targeting an HTTPRepository for rdf4j
+- A new QuadStore subclass is defined, `RDF4JDatabase`, targeting an `HTTPRepository` for RDF4J
 - New options:
     - `--triplesStore`: Address to reach the triples store. If specified produced triples are written at this address.
     - `--repositoryId`: Repository Id related to the triples store. Also triplesStore option -ts should be provided.
