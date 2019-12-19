@@ -56,10 +56,10 @@ options:
  -inc,--incrementalUpdate         Incremental update option to incrementally load triples in the database database while performing                                       the mapping procedure.
  -iri,--baseIRI <arg>             Specify a base IRI for relative IRIs. Otherwise @base is parsed.
  -m,--mappingfile <arg>           One or more mapping file paths and/or strings (multiple values are concatenated)
- -n,--noCache                     Do not use subjects and records caches in the executor.
- -ord,--ordered                   Mapping execution is ordered by logical source and caches are cleaned after each logical source.                                         This option improves memory consumption and it is advisable if no join condition exist among mappings.
+ -n,--noCache                     Do not use subjects and records caches in the executor. 
+ -ord,--ordered                   Mapping execution is ordered by logical source and caches are cleaned after each logical source.
  -o,--outputfile <arg>            Path to output file (-o stdout can be used for debugging)
- -pb,--prefixBaseIRI <arg>         Specify a prefix for the base IRI used for relative IRIs
+ -pb,--prefixBaseIRI <arg>        Specify a prefix for the base IRI used for relative IRIs
  -r,--repositoryId <arg>          Repository Id related to the triples store. Also option -ts
                                   should be provided
  -s,--serialization <arg>         Serialization format (nquads (default), turtle, trig, trix, jsonld, hdt)
