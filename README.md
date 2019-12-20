@@ -1,6 +1,6 @@
 # RML Mapper - Cefriel fork
 
-This repository contains a fork of the [RMLio/rmlmapper-java](https://github.com/RMLio/rmlmapper-java) repository maintained by Cefriel Knowledge Technologies team as a building block of the [Chimera](https://github.com/cefriel/chimera) solution for semantic data conversion.
+This repository contains a fork of the [RMLio/rmlmapper-java](https://github.com/RMLio/rmlmapper-java) repository maintained by Cefriel as a building block of the [Chimera](https://github.com/cefriel/chimera) solution for semantic data conversion.
 
 ### Changelog ###
 
