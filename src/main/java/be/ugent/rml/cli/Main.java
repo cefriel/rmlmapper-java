@@ -16,6 +16,9 @@ import be.ugent.rml.term.NamedNode;
 import be.ugent.rml.term.Term;
 import ch.qos.logback.classic.Level;
 import org.apache.commons.cli.*;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,6 +127,11 @@ public class Main {
                         "Also triplesStore option -ts should be provided.")
                 .hasArg()
                 .build();
+        Option contextOption = Option.builder("ctx")
+                .longOpt("contextIRI")
+                .desc("Specify a context for querying the triple store.")
+                .hasArg()
+                .build();
         Option batchSizeOption = Option.builder("b")
                 .longOpt("batchSize")
                 .desc("Batch size, i.e., number of statements for each update to the triples store. " +
@@ -169,6 +177,7 @@ public class Main {
         options.addOption(usernameOption);
         options.addOption(triplesStoreOption);
         options.addOption(repositoryIdOption);
+        options.addOption(contextOption);
         options.addOption(batchSizeOption);
         options.addOption(incrementalUpdateOption);
         options.addOption(noCacheOption);
@@ -250,15 +259,20 @@ public class Main {
                     outputStore = new RDF4JStore();
                 }
 
+                IRI context = null;
+                if (checkOptionPresence(contextOption, lineArgs, configFile)) {
+                    ValueFactory vf = SimpleValueFactory.getInstance();
+                    context = vf.createIRI(getPriorityOptionValue(contextOption, lineArgs, configFile));
+                }
                 if (tripleStore) {
                     String ts = getPriorityOptionValue(triplesStoreOption, lineArgs, configFile);
                     String repoID = getPriorityOptionValue(repositoryIdOption, lineArgs, configFile);
                     if (checkOptionPresence(batchSizeOption, lineArgs, configFile))
-                        outputStore = new RDF4JDatabase(ts, repoID,
+                        outputStore = new RDF4JDatabase(ts, repoID, context,
                                 Integer.parseInt(getPriorityOptionValue(batchSizeOption, lineArgs, configFile)),
                                 checkOptionPresence(incrementalUpdateOption, lineArgs, configFile));
                     else
-                        outputStore = new RDF4JDatabase(ts, repoID, 0, false);
+                        outputStore = new RDF4JDatabase(ts, repoID, context, 0, false);
                 }
 
                 Executor executor;
