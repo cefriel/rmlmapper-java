@@ -46,6 +46,7 @@ New options:
 - Empty strings in a CSV file are not considered in mappings (to avoid having ?s ?p "" kind of triples)
 - If a logical source is not found, the procedure continues skipping the mapping and logging the event
 - Changed `-o` option behaviour. If -o option is not set, the default behaviour is do nothing. To print to stdout it is required to use `-o stdout`. To save to file the `-o` option should be set, it can be combined with `-ts` and `-r` options if `-inc` is not set.
+- Add `-ctx` option to to attach a context (named graph) to triples generated.
 
 ### `rmlmapper-cefriel.jar` ###
 This is the intended usage of the `rmlmapper-cefriel.jar`.
@@ -53,7 +54,8 @@ This is the intended usage of the `rmlmapper-cefriel.jar`.
 usage: java -jar rmlmapper-cefriel.jar <options>
 options:
  -b,--batchSize <arg>             Batch size, i.e., number of statements for each update loading file to the triples store. 
-                                  If -inc is set it is used as batch size also for incremental updates. 
+                                  If -inc is set it is used as batch size also for incremental updates.
+ -ctx,--context <arg>             IRI identifying named graph for triples generated.
  -f,--functionfile <arg>          Path to functions.ttl file (dynamic functions are found relative to functions.ttl)
  -inc,--incrementalUpdate         Incremental update option to incrementally load triples in the database database while performing                                       the mapping procedure.
  -iri,--baseIRI <arg>             Specify a base IRI for relative IRIs. Otherwise @base is parsed.
