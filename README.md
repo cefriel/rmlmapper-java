@@ -46,7 +46,7 @@ New options:
 - Empty strings in a CSV file are not considered in mappings (to avoid having ?s ?p "" kind of triples)
 - If a logical source is not found, the procedure continues skipping the mapping and logging the event
 - Changed `-o` option behaviour. If -o option is not set, the default behaviour is do nothing. To print to stdout it is required to use `-o stdout`. To save to file the `-o` option should be set, it can be combined with `-ts` and `-r` options if `-inc` is not set.
-- Add `-ctx` option to to attach a context (named graph) to triples generated.
+- Add `-ctx` option to specify a context (named graph) for triples generated.
 
 ### `rmlmapper-cefriel.jar` ###
 This is the intended usage of the `rmlmapper-cefriel.jar`.
