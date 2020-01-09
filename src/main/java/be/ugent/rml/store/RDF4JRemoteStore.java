@@ -49,18 +49,19 @@ public class RDF4JRemoteStore extends QuadStore {
     public RDF4JRemoteStore(String dbAddress, String repositoryID, IRI context, int batchSize, boolean incremental) {
         repo = new HTTPRepository(dbAddress, repositoryID);
         repo.init();
-        init(repo, context, batchSize, incremental);
+        init(context, batchSize, incremental);
     }
 
-    public RDF4JRemoteStore(Repository repo, IRI context, int batchSize, boolean incremental) {
-        init(repo, context, batchSize, incremental);
+    public RDF4JRemoteStore(Repository r, IRI context, int batchSize, boolean incremental) {
+        this.repo = r;
+        init(context, batchSize, incremental);
     }
 
-    private void init(Repository repo, IRI context, int batchSize, boolean incremental) {
+    private void init (IRI context, int batchSize, boolean incremental) {
         if (context != null) {
-            ContextAwareRepository cRepo = new ContextAwareRepository(repo);
+            ContextAwareRepository cRepo = new ContextAwareRepository(this.repo);
             cRepo.setInsertContext(context);
-            repo = cRepo;
+            this.repo = cRepo;
         }
         model = new TreeModel();
         BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
