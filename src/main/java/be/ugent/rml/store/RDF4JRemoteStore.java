@@ -7,9 +7,9 @@ import be.ugent.rml.term.Term;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.impl.TreeModel;
-import org.eclipse.rdf4j.model.util.Models;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.contextaware.ContextAwareRepository;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
@@ -27,14 +27,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RDF4JDatabase extends QuadStore {
+public class RDF4JRemoteStore extends QuadStore {
 
     private static final int CORE_POOL_SIZE = 4;
     private static final int MAXIMUM_POOL_SIZE = 5;
     private static final int KEEP_ALIVE_MINUTES = 10;
 
     private Repository repo;
-    private IRI context;
     private int batchSize;
     private boolean incremental;
     private AtomicInteger numBatches;
@@ -45,16 +44,28 @@ public class RDF4JDatabase extends QuadStore {
 
     private ThreadPoolExecutor executor;
 
-    private static final Logger logger = LoggerFactory.getLogger(RDF4JDatabase.class);
+    private static final Logger logger = LoggerFactory.getLogger(RDF4JRemoteStore.class);
 
-    public RDF4JDatabase(String dbAddress, String repositoryID, IRI context, int batchSize, boolean incremental) {
-        model = new TreeModel();
+    public RDF4JRemoteStore(String dbAddress, String repositoryID, IRI context, int batchSize, boolean incremental) {
         repo = new HTTPRepository(dbAddress, repositoryID);
         repo.init();
+        init(repo, context, batchSize, incremental);
+    }
+
+    public RDF4JRemoteStore(Repository repo, IRI context, int batchSize, boolean incremental) {
+        init(repo, context, batchSize, incremental);
+    }
+
+    private void init(Repository repo, IRI context, int batchSize, boolean incremental) {
+        if (context != null) {
+            ContextAwareRepository cRepo = new ContextAwareRepository(repo);
+            cRepo.setInsertContext(context);
+            repo = cRepo;
+        }
+        model = new TreeModel();
         BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
         executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE,
                 KEEP_ALIVE_MINUTES, TimeUnit.MINUTES, workQueue);
-        this.context = context;
         this.batchSize = batchSize;
         this.incremental = incremental;
         triplesWithGraphCounter = 0;
@@ -128,10 +139,7 @@ public class RDF4JDatabase extends QuadStore {
                     @Override
                     public void run() {
                         try (RepositoryConnection con = repo.getConnection()) {
-                            if (context != null)
-                                con.add(b, context);
-                            else
-                                con.add(b);
+                            con.add(b);
                             logger.info("Query completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + b.size() + "]");
                         }
                     }

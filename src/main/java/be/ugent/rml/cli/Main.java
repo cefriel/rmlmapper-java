@@ -9,7 +9,7 @@ import be.ugent.rml.functions.lib.IDLabFunctions;
 import be.ugent.rml.metadata.MetadataGenerator;
 import be.ugent.rml.records.RecordsFactory;
 import be.ugent.rml.store.QuadStore;
-import be.ugent.rml.store.RDF4JDatabase;
+import be.ugent.rml.store.RDF4JRemoteStore;
 import be.ugent.rml.store.RDF4JStore;
 import be.ugent.rml.store.SimpleQuadStore;
 import be.ugent.rml.term.NamedNode;
@@ -206,7 +206,7 @@ public class Main {
                 setLoggerLevel(Level.DEBUG);
             } else {
                 setLoggerLevel(Level.ERROR);
-                Logger databaseLog = LoggerFactory.getLogger(RDF4JDatabase.class);
+                Logger databaseLog = LoggerFactory.getLogger(RDF4JRemoteStore.class);
                 ((ch.qos.logback.classic.Logger) databaseLog).setLevel(Level.DEBUG);
                 Logger infoLog = LoggerFactory.getLogger(Executor.class);
                 ((ch.qos.logback.classic.Logger) infoLog).setLevel(Level.INFO);
@@ -268,11 +268,11 @@ public class Main {
                     String ts = getPriorityOptionValue(triplesStoreOption, lineArgs, configFile);
                     String repoID = getPriorityOptionValue(repositoryIdOption, lineArgs, configFile);
                     if (checkOptionPresence(batchSizeOption, lineArgs, configFile))
-                        outputStore = new RDF4JDatabase(ts, repoID, context,
+                        outputStore = new RDF4JRemoteStore(ts, repoID, context,
                                 Integer.parseInt(getPriorityOptionValue(batchSizeOption, lineArgs, configFile)),
                                 checkOptionPresence(incrementalUpdateOption, lineArgs, configFile));
                     else
-                        outputStore = new RDF4JDatabase(ts, repoID, context, 0, false);
+                        outputStore = new RDF4JRemoteStore(ts, repoID, context, 0, false);
                 }
 
                 Executor executor;
@@ -397,8 +397,8 @@ public class Main {
                         writeOutput(result, outputFile, outputFormat);
                     //Write quads
                     if (tripleStore) {
-                        ((RDF4JDatabase) result).writeToDB();
-                        ((RDF4JDatabase) result).shutDown();
+                        ((RDF4JRemoteStore) result).writeToDB();
+                        ((RDF4JRemoteStore) result).shutDown();
                     }
 
 
