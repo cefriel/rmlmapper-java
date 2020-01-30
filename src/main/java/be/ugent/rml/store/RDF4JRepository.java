@@ -27,13 +27,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RDF4JRemoteStore extends QuadStore {
+public class RDF4JRepository extends QuadStore {
 
     private static final int CORE_POOL_SIZE = 4;
     private static final int MAXIMUM_POOL_SIZE = 5;
     private static final int KEEP_ALIVE_MINUTES = 10;
 
     private Repository repo;
+    private boolean shutdownRepository;
+
     private int batchSize;
     private boolean incremental;
     private AtomicInteger numBatches;
@@ -44,15 +46,16 @@ public class RDF4JRemoteStore extends QuadStore {
 
     private ThreadPoolExecutor executor;
 
-    private static final Logger logger = LoggerFactory.getLogger(RDF4JRemoteStore.class);
+    private static final Logger logger = LoggerFactory.getLogger(RDF4JRepository.class);
 
-    public RDF4JRemoteStore(String dbAddress, String repositoryID, IRI context, int batchSize, boolean incremental) {
+    public RDF4JRepository(String dbAddress, String repositoryID, IRI context, int batchSize, boolean incremental) {
         repo = new HTTPRepository(dbAddress, repositoryID);
+        shutdownRepository = true;
         repo.init();
         init(context, batchSize, incremental);
     }
 
-    public RDF4JRemoteStore(Repository r, IRI context, int batchSize, boolean incremental) {
+    public RDF4JRepository(Repository r, IRI context, int batchSize, boolean incremental) {
         this.repo = r;
         init(context, batchSize, incremental);
     }
@@ -89,7 +92,7 @@ public class RDF4JRemoteStore extends QuadStore {
         model.add(s, p, o); // Discarded now ,g);
 
         if (incremental && model.size() >= batchSize)
-            writeToDB();
+            writeToRepository();
 
         if (g != null) {
             triplesWithGraphCounter ++;
@@ -121,7 +124,7 @@ public class RDF4JRemoteStore extends QuadStore {
         }
     }
 
-    public void writeToDB() {
+    private void writeToRepository() {
         if (triplesWithGraphCounter > 0)
             logger.warn("There are graphs generated. They are not supported yet.");
 
@@ -153,14 +156,21 @@ public class RDF4JRemoteStore extends QuadStore {
         }
     }
 
+    /**
+     * Statements in the buffer are flushed to the repository. Internal components are gracefully stopped.
+     * If the Repository object is passed as argument in the constructor, the shutDown() method is not called on the repository.
+     */
+    @Override
     public void shutDown() {
+        writeToRepository();
         executor.shutdown();
         try {
             executor.awaitTermination(60, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             logger.error("Execution stopped: TIMEOUT");
         }
-        repo.shutDown();
+        if (shutdownRepository)
+            repo.shutDown();
     }
 
     @Override

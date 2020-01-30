@@ -145,6 +145,11 @@ public class RDF4JStore extends QuadStore {
     }
 
     @Override
+    public void shutDown() {
+        return;
+    }
+
+    @Override
     public boolean isEmpty() {
         return model.isEmpty();
     }

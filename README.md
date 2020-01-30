@@ -4,8 +4,8 @@ This repository contains a fork of the [RMLio/rmlmapper-java](https://github.com
 
 ### Changelog ###
 
-#### Add support for RDF4J HTTP Repository ####
-- A new QuadStore subclass is defined, `RDF4JRemoteStore`, targeting an `HTTPRepository` or an already initialized repository for RDF4J
+#### Add support for RDF4J Repositories ####
+- A new QuadStore subclass is defined, `RDF4JRepository`, targeting a remote repository (identified by the address and the repository ID) or an already initialized `Repository` for RDF4J
 - New options:
     - `--triplesStore`: Address to reach the triples store. If specified produced triples are written at this address.
     - `--repositoryId`: Repository Id related to the triples store. Also triplesStore option -ts should be provided.

@@ -129,6 +129,11 @@ public abstract class QuadStore {
      */
     public abstract void write(Writer out, String format) throws Exception;
 
+    /**
+     * Graceful shutdown of QuadStore
+     */
+    public abstract void shutDown();
+
     // END OF ABSTRACT METHODS
 
     // following final methods use the abstract methods to provide additional functionality or helper functions
@@ -319,4 +324,5 @@ public abstract class QuadStore {
 
         return output.toString();
     }
+
 }

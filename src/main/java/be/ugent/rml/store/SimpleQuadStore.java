@@ -104,6 +104,11 @@ public class SimpleQuadStore extends QuadStore {
     }
 
     @Override
+    public void shutDown() {
+        return;
+    }
+
+    @Override
     public boolean equals(Object o) {
         throw new UnsupportedOperationException("Method not implemented.");
     }
