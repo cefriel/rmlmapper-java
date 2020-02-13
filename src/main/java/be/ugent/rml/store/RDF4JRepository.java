@@ -29,9 +29,9 @@ import java.util.regex.Pattern;
 
 public class RDF4JRepository extends QuadStore {
 
-    private static final int CORE_POOL_SIZE = 4;
-    private static final int MAXIMUM_POOL_SIZE = 5;
-    private static final int KEEP_ALIVE_MINUTES = 10;
+    public static int CORE_POOL_SIZE = 4;
+    public static int MAXIMUM_POOL_SIZE = 5;
+    public static int KEEP_ALIVE_MINUTES = 10;
 
     private Repository repo;
     private boolean shutdownRepository;
