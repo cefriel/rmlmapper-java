@@ -43,9 +43,9 @@ New options:
 - `--ordered`: Mapping execution is ordered by logical source and records caches are cleaned after each logical source.
 
 #### Other changes ####
-- Empty strings in a CSV file are not considered in mappings (to avoid having ?s ?p "" kind of triples)
+- Empty strings in a csv/json/xml records are not considered in mappings (to avoid having ?s ?p "" kind of triples). To consider also empty strings as records `-es` option should be set. 
 - If a logical source is not found, the procedure continues skipping the mapping and logging the event
-- Changed `-o` option behaviour. If -o option is not set, the default behaviour is do nothing. To print to stdout it is required to use `-o stdout`. To save to file the `-o` option should be set, it can be combined with `-ts` and `-r` options if `-inc` is not set.
+- Changed `-o` option behaviour. If `-o` option is not set, the default behaviour is do nothing. To print to stdout it is required to use `-o stdout`. To save to file the `-o` option should be set, it can be combined with `-ts` and `-r` options if `-inc` is not set.
 - Add `-ctx` option to specify a context (named graph) for triples generated.
 
 ### `rmlmapper-cefriel.jar` ###
@@ -56,8 +56,10 @@ options:
  -b,--batchSize <arg>             Batch size, i.e., number of statements for each update loading file to the triples store. 
                                   If -inc is set it is used as batch size also for incremental updates.
  -ctx,--context <arg>             IRI identifying named graph for triples generated.
+ -es,--emptyStrings               Set option if empty strings should be considered as values.
  -f,--functionfile <arg>          Path to functions.ttl file (dynamic functions are found relative to functions.ttl)
- -inc,--incrementalUpdate         Incremental update option to incrementally load triples in the database database while performing                                       the mapping procedure.
+ -inc,--incrementalUpdate         Incremental update option to incrementally load triples in the database database while performing                                       
+                                  the mapping procedure.
  -iri,--baseIRI <arg>             Specify a base IRI for relative IRIs. Otherwise @base is parsed.
  -m,--mappingfile <arg>           One or more mapping file paths and/or strings (multiple values are concatenated)
  -n,--noCache                     Do not use subjects and records caches in the executor. 

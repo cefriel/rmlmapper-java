@@ -24,6 +24,7 @@ public class RecordsFactory {
     private Map<Access, Map<String, Map<String, List<Record>>>> recordCache;
     private AccessFactory accessFactory;
     private Map<String, ReferenceFormulationRecordFactory> referenceFormulationRecordFactoryMap;
+    private boolean emptyStrings = false;
 
     public RecordsFactory(String basePath) {
         accessFactory = new AccessFactory(basePath, null);
@@ -39,9 +40,13 @@ public class RecordsFactory {
         recordCache = new HashMap<>();
 
         referenceFormulationRecordFactoryMap = new HashMap<>();
-        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLRecordFactory());
-        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "JSONPath", new JSONRecordFactory());
-        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "CSV", new CSVRecordFactory());
+        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLRecordFactory(emptyStrings));
+        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "JSONPath", new JSONRecordFactory(emptyStrings));
+        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "CSV", new CSVRecordFactory(emptyStrings));
+    }
+
+    public void setEmptyStrings(boolean emptyStrings) {
+        this.emptyStrings = emptyStrings;
     }
 
     /**
@@ -179,4 +184,5 @@ public class RecordsFactory {
     public void cleanRecordCache() {
         recordCache = new HashMap<>();
     }
+
 }

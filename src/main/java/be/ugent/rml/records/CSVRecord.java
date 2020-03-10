@@ -13,10 +13,12 @@ public class CSVRecord extends Record {
     // The CSV record that is provided by the Apache CSVParser.
     private org.apache.commons.csv.CSVRecord record;
     private Map<String, String> datatypes;
+    private boolean emptyStrings;
 
-    CSVRecord(org.apache.commons.csv.CSVRecord record, Map<String, String> datatypes) {
+    CSVRecord(org.apache.commons.csv.CSVRecord record, Map<String, String> datatypes, boolean emptyStrings) {
         this.record = record;
         this.datatypes = datatypes;
+        this.emptyStrings = emptyStrings;
     }
 
     /**
@@ -46,9 +48,8 @@ public class CSVRecord extends Record {
 
         try {
             obj = this.record.get(value);
-            if (obj.equals(""))
-                return result;
-            result.add(obj);
+            if (!obj.equals("") || emptyStrings)
+                result.add(obj);
         } catch (Exception e) {
             return result;
         }

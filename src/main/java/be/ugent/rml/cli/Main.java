@@ -161,6 +161,10 @@ public class Main {
                 .desc("Specify a prefix for the base IRI used for relative IRIs.")
                 .hasArg()
                 .build();
+        Option emptyStringsOption = Option.builder("es")
+                .longOpt("emptyStrings")
+                .desc("Set option if empty strings should be considered as values.")
+                .build();
         options.addOption(mappingdocOption);
         options.addOption(outputfileOption);
         options.addOption(functionfileOption);
@@ -184,6 +188,7 @@ public class Main {
         options.addOption(orderedOption);
         options.addOption(baseIRIOption);
         options.addOption(baseIRIPrefixOption);
+        options.addOption(emptyStringsOption);
 
         CommandLineParser parser = new DefaultParser();
         try {
@@ -247,6 +252,8 @@ public class Main {
                 }
 
                 RecordsFactory factory = new RecordsFactory(basePath);
+                if (checkOptionPresence(emptyStringsOption, lineArgs, configFile))
+                    factory.setEmptyStrings(true);
 
                 String outputFormat = getPriorityOptionValue(serializationFormatOption, lineArgs, configFile);
                 QuadStore outputStore;

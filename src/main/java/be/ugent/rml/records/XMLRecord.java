@@ -17,9 +17,11 @@ import javax.xml.xpath.XPathFactory;
 public class XMLRecord extends Record {
 
     private Node node;
+    private boolean emptyStrings;
 
-    public XMLRecord(Node node) {
+    public XMLRecord(Node node, boolean emptyStrings) {
         this.node = node;
+        this.emptyStrings = emptyStrings;
     }
 
     /**
@@ -36,7 +38,9 @@ public class XMLRecord extends Record {
             NodeList result = (NodeList) xPath.compile(value).evaluate(node, XPathConstants.NODESET);
 
             for (int i = 0; i < result.getLength(); i ++) {
-                results.add(result.item(i).getTextContent());
+                String os = result.item(i).getTextContent();
+                if (!os.equals("") || emptyStrings)
+                    results.add(os);
             }
         } catch (XPathExpressionException e) {
             e.printStackTrace();

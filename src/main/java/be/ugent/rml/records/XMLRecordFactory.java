@@ -21,6 +21,12 @@ import java.util.List;
  */
 public class XMLRecordFactory extends IteratorFormat<Document> implements ReferenceFormulationRecordFactory {
 
+    private boolean emptyStrings;
+
+    public XMLRecordFactory(boolean emptyStrings) {
+        this.emptyStrings = emptyStrings;
+    }
+
     /**
      * This method returns the records from an XML document based on an iterator.
      * @param document the document from which records need to get.
@@ -37,7 +43,7 @@ public class XMLRecordFactory extends IteratorFormat<Document> implements Refere
             NodeList result = (NodeList) xPath.compile(iterator).evaluate(document, XPathConstants.NODESET);
 
             for (int i = 0; i < result.getLength(); i ++) {
-                records.add(new XMLRecord(result.item(i)));
+                records.add(new XMLRecord(result.item(i), emptyStrings));
             }
         } catch (XPathExpressionException e) {
             e.printStackTrace();

@@ -15,6 +15,12 @@ import java.util.List;
  */
 public class JSONRecordFactory extends IteratorFormat<Object> implements ReferenceFormulationRecordFactory {
 
+    private boolean emptyStrings;
+
+    public JSONRecordFactory(boolean emptyStrings) {
+        this.emptyStrings = emptyStrings;
+    }
+
     /**
      * This method returns the records from a JSON document based on an iterator.
      * @param document the document from which records need to get.
@@ -33,7 +39,7 @@ public class JSONRecordFactory extends IteratorFormat<Object> implements Referen
             List<String> pathList = JsonPath.using(conf).parse(document).read(iterator);
 
             for(String p :pathList) {
-                records.add(new JSONRecord(document, p));
+                records.add(new JSONRecord(document, p, emptyStrings));
             }
         } catch(PathNotFoundException e) {
             logger.warn(e.getMessage(), e);

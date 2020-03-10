@@ -22,6 +22,12 @@ import java.util.stream.Collectors;
  */
 public class CSVRecordFactory implements ReferenceFormulationRecordFactory {
 
+    private boolean emptyStrings;
+
+    public CSVRecordFactory(boolean emptyStrings) {
+        this.emptyStrings = emptyStrings;
+    }
+
     /**
      * This method returns a list of CSV records for a data source.
      * @param access the access from which records need to be fetched.
@@ -56,7 +62,7 @@ public class CSVRecordFactory implements ReferenceFormulationRecordFactory {
             List<org.apache.commons.csv.CSVRecord> myEntries = parser.getRecords();
 
             return myEntries.stream()
-                    .map(record -> new CSVRecord(record, access.getDataTypes()))
+                    .map(record -> new CSVRecord(record, access.getDataTypes(), emptyStrings))
                     .collect(Collectors.toList());
         } else {
             // We still return an empty list of records when a parser is not found.

@@ -18,10 +18,12 @@ public class JSONRecord extends Record {
 
     private String path;
     private Object document;
+    private boolean emptyStrings;
 
-    public JSONRecord(Object document, String path) {
+    public JSONRecord(Object document, String path, boolean emptyStrings) {
         this.path = path;
         this.document = document;
+        this.emptyStrings = emptyStrings;
     }
 
     /**
@@ -46,7 +48,9 @@ public class JSONRecord extends Record {
                 ArrayList<String> tempList = new ArrayList<>();
 
                 for (Object o : array) {
-                    tempList.add(o.toString());
+                    String os = o.toString();
+                    if (!os.equals("") || emptyStrings)
+                        tempList.add(os);
                 }
 
                 results.add(tempList);
