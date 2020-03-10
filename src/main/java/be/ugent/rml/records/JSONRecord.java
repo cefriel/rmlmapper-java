@@ -56,7 +56,9 @@ public class JSONRecord extends Record {
                 results.add(tempList);
             } else {
                 if (t != null) {
-                    results.add(t.toString());
+                    String ts = t.toString();
+                    if (!ts.equals("") || emptyStrings)
+                        results.add(ts);
                 }
             }
         } catch(PathNotFoundException e) {
