@@ -1,5 +1,7 @@
 package be.ugent.rml.access;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -25,7 +27,21 @@ public class InputStreamAccess implements Access {
         InputStream is = inputStreamsMap.get(stream);
         if (is == null)
             throw new IOException("InputStream " + stream + " not found in the InputStreamMap");
-        return is;
+        // Copy the stream to avoid consuming it
+        ByteArrayOutputStream baos = getOutputStream(is);
+        inputStreamsMap.put(stream, new ByteArrayInputStream(baos.toByteArray()));
+        return new ByteArrayInputStream(baos.toByteArray());
+    }
+
+    private ByteArrayOutputStream getOutputStream(InputStream is) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = is.read(buffer)) > -1 ) {
+            baos.write(buffer, 0, len);
+        }
+        baos.flush();
+        return baos;
     }
 
     /**
