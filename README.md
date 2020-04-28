@@ -2,6 +2,8 @@
 
 This repository contains a fork of the [RMLio/rmlmapper-java](https://github.com/RMLio/rmlmapper-java) repository maintained by Cefriel as a building block of the [Chimera](https://github.com/cefriel/chimera) solution for semantic data conversion.
 
+The fork is updated to version [4.7.0](https://github.com/RMLio/rmlmapper-java/releases/tag/v4.7.0).
+
 ### Changelog ###
 
 #### Add support for RDF4J Repositories ####
