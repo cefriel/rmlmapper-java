@@ -3,7 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.cefriel</groupId>
   <artifactId>rmlmapper</artifactId>
+<<<<<<< HEAD
   <version>1.0.0</version>
+=======
+  <version>4.7.0</version>
+>>>>>>> upstream/master
   <scm>
     <connection>scm:git:ssh://git@github.com:RMLio/rmlmapper-java.git</connection>
     <url>https://github.com/RMLio/rmlmapper-java</url>
@@ -178,9 +182,9 @@
     </dependency>
   </dependencies>
   <properties>
-    <maven.compiler.target>8</maven.compiler.target>
     <maven.compiler.source>8</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.target>8</maven.compiler.target>
     <junit.version>4.12</junit.version>
   </properties>
 </project>
