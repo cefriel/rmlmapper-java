@@ -3,11 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.cefriel</groupId>
   <artifactId>rmlmapper</artifactId>
-<<<<<<< HEAD
-  <version>1.0.0</version>
-=======
-  <version>4.7.0</version>
->>>>>>> upstream/master
+  <version>1.1.0</version>
   <scm>
     <connection>scm:git:ssh://git@github.com:RMLio/rmlmapper-java.git</connection>
     <url>https://github.com/RMLio/rmlmapper-java</url>
@@ -23,30 +19,6 @@
         <configuration>
           <source>${maven.compiler.source}</source>
           <target>${maven.compiler.source}</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.0</version>
-        <executions>
-          <execution>
-            <id>attach-javadocs</id>
-            <phase>install</phase>
-            <goals>
-              <goal>javadoc</goal>
-            </goals>
-            <configuration>
-              <show>public</show>
-              <reportOutputDirectory>docs</reportOutputDirectory>
-              <failOnError>false</failOnError>
-              <doclint>none</doclint>
-            </configuration>
-          </execution>
-        </executions>
-        <configuration>
-          <source>1.8</source>
-          <reportOutputDirectory>docs</reportOutputDirectory>
-          <locale>en</locale>
         </configuration>
       </plugin>
       <plugin>
@@ -182,9 +154,9 @@
     </dependency>
   </dependencies>
   <properties>
+    <maven.compiler.target>8</maven.compiler.target>
     <maven.compiler.source>8</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.target>8</maven.compiler.target>
     <junit.version>4.12</junit.version>
   </properties>
 </project>
