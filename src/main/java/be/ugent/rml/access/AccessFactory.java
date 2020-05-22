@@ -10,11 +10,8 @@ import be.ugent.rml.term.NamedNode;
 import be.ugent.rml.term.Term;
 import org.apache.commons.lang.NotImplementedException;
 
-import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 
-import static be.ugent.rml.Utils.isInputStream;
 import static be.ugent.rml.Utils.isRemoteFile;
 
 /**
@@ -24,16 +21,13 @@ public class AccessFactory {
 
     // The path used when local paths are not absolute.
     private String basePath;
-    // Map used to directly access input streams
-    private Map<String, InputStream> inputStreamsMap;
 
     /**
      * The constructor of the AccessFactory.
      * @param basePath the base path for the local file system.
      */
-    public AccessFactory(String basePath, Map<String, InputStream> inputStreamsMap) {
+    public AccessFactory(String basePath) {
         this.basePath = basePath;
-        this.inputStreamsMap = inputStreamsMap;
     }
 
     /**
@@ -57,8 +51,6 @@ public class AccessFactory {
 
                 if (isRemoteFile(value)) {
                     access = new RemoteFileAccess(value);
-                } else if (isInputStream(value)) {
-                    access = new InputStreamAccess(value, inputStreamsMap);
                 } else {
                     access = new LocalFileAccess(value, this.basePath);
                 }

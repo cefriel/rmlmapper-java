@@ -6,8 +6,9 @@ import be.ugent.rml.term.NamedNode;
 import be.ugent.rml.term.Term;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Initializer {
 
@@ -15,13 +16,13 @@ public class Initializer {
     private QuadStore rmlStore;
     private FunctionLoader functionLoader;
     private List<Term> triplesMaps;
-    private HashMap<Term, Mapping> mappings;
+    private Map<Term, Mapping> mappings;
 
     public Initializer(QuadStore rmlStore, FunctionLoader functionLoader) throws Exception {
         this.rmlStore = rmlStore;
         //we get all the TriplesMaps from the mapping
         this.triplesMaps = this.getAllTriplesMaps();
-        this.mappings = new HashMap<Term, Mapping>();
+        this.mappings = new ConcurrentHashMap<Term, Mapping>();
 
         if (functionLoader == null) {
             this.functionLoader = new FunctionLoader();
@@ -60,7 +61,7 @@ public class Initializer {
         }
     }
 
-    public HashMap<Term, Mapping> getMappings() {
+    public Map<Term, Mapping> getMappings() {
         return this.mappings;
     }
 
@@ -70,5 +71,9 @@ public class Initializer {
 
     public FunctionLoader getFunctionLoader() {
         return this.functionLoader;
+    }
+
+    public QuadStore getRMLStore() {
+        return rmlStore;
     }
 }

@@ -50,7 +50,9 @@ public class RDF4JStore extends QuadStore {
         Value o = getFilterObject(object);
         Resource g = getFilterGraph(graph);
 
-        model.add(s, p, o, g);
+        synchronized (model) {
+            model.add(s, p, o, g);
+        }
 
         if (g != null) {
             triplesWithGraphCounter++;
@@ -68,7 +70,9 @@ public class RDF4JStore extends QuadStore {
         IRI filterPredicate = getFilterPredicate(predicate);
         Value filterObject = getFilterObject(object);
 
-        result = model.filter(filterSubject, filterPredicate, filterObject);
+        synchronized (model) {
+            result = model.filter(filterSubject, filterPredicate, filterObject);
+        }
 
         List<Quad> quads = new ArrayList<>();
 
@@ -88,12 +92,12 @@ public class RDF4JStore extends QuadStore {
     }
 
     @Override
-    public void addNamespace(String prefix, String name) {
+    synchronized public void addNamespace(String prefix, String name) {
         model.setNamespace(new SimpleNamespace(prefix, name));
     }
 
     @Override
-    public void copyNameSpaces(QuadStore store) {
+    synchronized public void copyNameSpaces(QuadStore store) {
         if (store instanceof RDF4JStore) {
             RDF4JStore rdf4JStore = (RDF4JStore) store;
 
@@ -106,7 +110,7 @@ public class RDF4JStore extends QuadStore {
     }
 
     @Override
-    public void read(InputStream is, String base, RDFFormat format) throws Exception {
+    synchronized public void read(InputStream is, String base, RDFFormat format) throws Exception {
         if (base == null) {
            base = "";
         }
@@ -119,7 +123,7 @@ public class RDF4JStore extends QuadStore {
     }
 
     @Override
-    public void write(Writer out, String format) throws Exception {
+    synchronized public void write(Writer out, String format) throws Exception {
         switch (format) {
             case "turtle":
                 Rio.write(model, out, RDFFormat.TURTLE);
@@ -150,12 +154,12 @@ public class RDF4JStore extends QuadStore {
     }
 
     @Override
-    public boolean isEmpty() {
+    synchronized public boolean isEmpty() {
         return model.isEmpty();
     }
 
     @Override
-    public int size() {
+    synchronized public int size() {
         return model.size();
     }
 

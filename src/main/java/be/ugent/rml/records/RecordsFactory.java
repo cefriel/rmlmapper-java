@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class creates records based on RML rules.
@@ -27,19 +28,19 @@ public class RecordsFactory {
     private boolean emptyStrings = false;
 
     public RecordsFactory(String basePath) {
-        accessFactory = new AccessFactory(basePath, null);
+        accessFactory = new AccessFactory(basePath);
         init();
     }
 
-    public RecordsFactory(String basePath, Map<String, InputStream> inputStreamsMap) {
-        accessFactory = new AccessFactory(basePath, inputStreamsMap);
+    public RecordsFactory(AccessFactory accessFactory) {
+        this.accessFactory = accessFactory;
         init();
     }
 
     private void init() {
-        recordCache = new HashMap<>();
+        recordCache = new ConcurrentHashMap<>();
 
-        referenceFormulationRecordFactoryMap = new HashMap<>();
+        referenceFormulationRecordFactoryMap = new ConcurrentHashMap<>();
         referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLRecordFactory(emptyStrings));
         referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "JSONPath", new JSONRecordFactory(emptyStrings));
         referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "CSV", new CSVRecordFactory(emptyStrings));
@@ -56,7 +57,7 @@ public class RecordsFactory {
      * @return a list of records.
      * @throws IOException
      */
-    public List<Record> createRecords(Term triplesMap, QuadStore rmlStore) throws IOException {
+     public List<Record> createRecords(Term triplesMap, QuadStore rmlStore) throws IOException {
         // Get Logical Sources.
         List<Term> logicalSources = Utils.getObjectsFromQuads(rmlStore.getQuads(triplesMap, new NamedNode(NAMESPACES.RML + "logicalSource"), null));
 
