@@ -2,13 +2,15 @@ package be.ugent.rml.records;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * This class is a specific implementation of a record for XML.
@@ -18,10 +20,14 @@ public class XMLRecord extends Record {
 
     private Node node;
     private boolean emptyStrings;
-
-    public XMLRecord(Node node, boolean emptyStrings) {
+    private XPath xPath;
+    private ConcurrentHashMap<String, XPathExpression> iterators_map;
+    
+    public XMLRecord(Node node, boolean emptyStrings, XPath xpath, ConcurrentHashMap<String, XPathExpression> iterators_map) {
         this.node = node;
         this.emptyStrings = emptyStrings;
+        this.xPath = xpath;
+        this.iterators_map = iterators_map;
     }
 
     /**
@@ -32,10 +38,17 @@ public class XMLRecord extends Record {
     @Override
     public List<Object> get(String value) {
         List<Object> results = new ArrayList<>();
-        XPath xPath = XPathFactory.newInstance().newXPath();
-
+        XPathExpression expr = null;
+        
         try {
-            NodeList result = (NodeList) xPath.compile(value).evaluate(node, XPathConstants.NODESET);
+            if (iterators_map.containsKey(value))
+                expr = iterators_map.get(value);
+            else {
+                expr = xPath.compile(value);
+                iterators_map.put(value, expr);
+            }
+            
+            NodeList result = (NodeList) expr.evaluate(node, XPathConstants.NODESET);
 
             for (int i = 0; i < result.getLength(); i ++) {
                 String os = result.item(i).getTextContent();

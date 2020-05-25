@@ -9,12 +9,14 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class is a record factory that creates XML records.
@@ -22,9 +24,13 @@ import java.util.List;
 public class XMLRecordFactory extends IteratorFormat<Document> implements ReferenceFormulationRecordFactory {
 
     private boolean emptyStrings;
-
+    private XPath xPath;
+    private ConcurrentHashMap<String, XPathExpression> iterators_map;
+    
     public XMLRecordFactory(boolean emptyStrings) {
         this.emptyStrings = emptyStrings;
+        xPath = XPathFactory.newInstance().newXPath();
+        iterators_map = new ConcurrentHashMap<String, XPathExpression>();
     }
 
     /**
@@ -37,13 +43,19 @@ public class XMLRecordFactory extends IteratorFormat<Document> implements Refere
     @Override
     List<Record> getRecordsFromDocument(Document document, String iterator) throws IOException {
         List<Record> records = new ArrayList<>();
-
+        XPathExpression expr = null;
         try {
-            XPath xPath = XPathFactory.newInstance().newXPath();
-            NodeList result = (NodeList) xPath.compile(iterator).evaluate(document, XPathConstants.NODESET);
+            if (iterators_map.containsKey(iterator))
+                expr=iterators_map.get(iterator);
+            else {
+                expr=xPath.compile(iterator);
+                iterators_map.put(iterator, expr);
+            }
+           
+            NodeList result = (NodeList) expr.evaluate(document, XPathConstants.NODESET);
 
             for (int i = 0; i < result.getLength(); i ++) {
-                records.add(new XMLRecord(result.item(i), emptyStrings));
+                records.add(new XMLRecord(result.item(i), emptyStrings, xPath, iterators_map));
             }
         } catch (XPathExpressionException e) {
             e.printStackTrace();
