@@ -27,5 +27,6 @@ public interface Mapper {
     QuadStore execute(List<Term> triplesMaps) throws Exception;
 
     List<Term> getTriplesMaps();
+    QuadStore getResultingQuads();
 
 }

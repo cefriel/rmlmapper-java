@@ -471,7 +471,13 @@ public class Executor implements Mapper {
         return temp;
     }
 
+    @Override
     public List<Term> getTriplesMaps() {
         return initializer.getTriplesMaps();
+    }
+
+    @Override
+    public QuadStore getResultingQuads() {
+        return resultingQuads;
     }
 }

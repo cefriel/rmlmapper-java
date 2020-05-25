@@ -89,10 +89,12 @@ public class RDF4JRepository extends QuadStore {
         Value o = getFilterObject(object);
         Resource g = getFilterGraph(graph);
 
-        model.add(s, p, o); // Discarded now ,g);
+        synchronized (model) {
+            model.add(s, p, o); // Discarded now ,g);
 
-        if (incremental && model.size() >= batchSize)
-            writeToRepository();
+            if (incremental && model.size() >= batchSize)
+                writeToRepository();
+        }
 
         if (g != null) {
             triplesWithGraphCounter ++;
@@ -162,7 +164,9 @@ public class RDF4JRepository extends QuadStore {
      */
     @Override
     public void shutDown() {
-        writeToRepository();
+        synchronized (model) {
+            writeToRepository();
+        }
         executor.shutdown();
         try {
             executor.awaitTermination(60, TimeUnit.MINUTES);
@@ -180,40 +184,49 @@ public class RDF4JRepository extends QuadStore {
 
     @Override
     public void write(Writer out, String format) {
-        switch (format) {
-            case "turtle":
-                Rio.write(model, out, RDFFormat.TURTLE);
+        synchronized (model) {
+            switch (format) {
+                case "repo":
+                    writeToRepository();
+                    break;
+                case "turtle":
+                    Rio.write(model, out, RDFFormat.TURTLE);
 
-                if (triplesWithGraphCounter > 0) {
-                    logger.warn("There are graphs generated. However, Turtle does not support graphs. Use Trig instead.");
-                }
+                    if (triplesWithGraphCounter > 0) {
+                        logger.warn("There are graphs generated. However, Turtle does not support graphs. Use Trig instead.");
+                    }
 
-                break;
-            case "trig":
-                Rio.write(model, out, RDFFormat.TRIG);
-                break;
-            case "trix":
-                Rio.write(model, out, RDFFormat.TRIX);
-                break;
-            case "jsonld":
-                Rio.write(model, out, RDFFormat.JSONLD);
-                break;
-            case "nquads":
-                Rio.write(model, out, RDFFormat.NQUADS);
-                break;
-            default:
-                throw new Error("Serialization " + format + " not supported");
+                    break;
+                case "trig":
+                    Rio.write(model, out, RDFFormat.TRIG);
+                    break;
+                case "trix":
+                    Rio.write(model, out, RDFFormat.TRIX);
+                    break;
+                case "jsonld":
+                    Rio.write(model, out, RDFFormat.JSONLD);
+                    break;
+                case "nquads":
+                    Rio.write(model, out, RDFFormat.NQUADS);
+                    break;
+                default:
+                    throw new Error("Serialization " + format + " not supported");
+            }
         }
     }
 
     @Override
     public boolean isEmpty() {
-        return model.isEmpty();
+        synchronized (model) {
+            return model.isEmpty();
+        }
     }
 
     @Override
     public int size() {
-        return model.size();
+        synchronized (model) {
+            return model.size();
+        }
     }
 
     @Override
