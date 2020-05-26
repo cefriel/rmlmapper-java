@@ -41,7 +41,8 @@ public class RecordsFactory {
         recordCache = new ConcurrentHashMap<>();
 
         referenceFormulationRecordFactoryMap = new ConcurrentHashMap<>();
-        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLRecordFactory(emptyStrings));
+        //referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLRecordFactory(emptyStrings));
+        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLSAXRecordFactory(emptyStrings));
         referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "JSONPath", new JSONRecordFactory(emptyStrings));
         referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "CSV", new CSVRecordFactory(emptyStrings));
     }

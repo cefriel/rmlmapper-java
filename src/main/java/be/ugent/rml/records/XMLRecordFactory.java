@@ -46,9 +46,9 @@ public class XMLRecordFactory extends IteratorFormat<Document> implements Refere
         XPathExpression expr = null;
         try {
             if (iterators_map.containsKey(iterator))
-                expr=iterators_map.get(iterator);
+                expr = iterators_map.get(iterator);
             else {
-                expr=xPath.compile(iterator);
+                expr = xPath.compile(iterator);
                 iterators_map.put(iterator, expr);
             }
            
