@@ -25,16 +25,15 @@ import java.util.regex.Pattern;
 
 public class RDF4JRepository extends QuadStore {
 
-    private Repository repo;
+    Repository repo;
     private RepositoryConnection connection;
-    private boolean shutdownRepository;
+    boolean shutdownRepository;
 
-    private int batchSize;
-    private boolean incremental;
-    private AtomicInteger numWrites;
+    int batchSize;
+    boolean incremental;
+    AtomicInteger numWrites;
 
-    private Model model;
-    private int triplesWithGraphCounter;
+    Model model;
 
     private static final Logger logger = LoggerFactory.getLogger(RDF4JRepository.class);
 
@@ -62,7 +61,6 @@ public class RDF4JRepository extends QuadStore {
         this.incremental = incremental;
         if(batchSize == 0)
             connection = repo.getConnection();
-        triplesWithGraphCounter = 0;
         numWrites = new AtomicInteger(0);
     }
 
@@ -117,9 +115,6 @@ public class RDF4JRepository extends QuadStore {
     }
 
     private void writeToRepository() {
-        if (triplesWithGraphCounter > 0)
-            logger.warn("There are graphs generated. They are not supported yet.");
-
         int size = this.batchSize;
         if (batchSize == 0)
             size = model.size();
@@ -171,11 +166,6 @@ public class RDF4JRepository extends QuadStore {
                     break;
                 case "turtle":
                     Rio.write(model, out, RDFFormat.TURTLE);
-
-                    if (triplesWithGraphCounter > 0) {
-                        logger.warn("There are graphs generated. However, Turtle does not support graphs. Use Trig instead.");
-                    }
-
                     break;
                 case "trig":
                     Rio.write(model, out, RDFFormat.TRIG);
@@ -233,7 +223,7 @@ public class RDF4JRepository extends QuadStore {
         throw new UnsupportedOperationException("Method not implemented.");
     }
 
-    private Resource getFilterSubject(Term subject) {
+    Resource getFilterSubject(Term subject) {
         if (subject != null) {
             ValueFactory vf = SimpleValueFactory.getInstance();
 
@@ -247,7 +237,7 @@ public class RDF4JRepository extends QuadStore {
         }
     }
 
-    private IRI getFilterPredicate(Term predicate) {
+    IRI getFilterPredicate(Term predicate) {
         if (predicate != null) {
             return SimpleValueFactory.getInstance().createIRI(predicate.getValue());
         } else {
@@ -255,7 +245,7 @@ public class RDF4JRepository extends QuadStore {
         }
     }
 
-    private Value getFilterObject(Term object) {
+    Value getFilterObject(Term object) {
         if (object != null) {
             ValueFactory vf = SimpleValueFactory.getInstance();
 
@@ -279,7 +269,7 @@ public class RDF4JRepository extends QuadStore {
         }
     }
 
-    private Resource getFilterGraph(Term graph) {
+    Resource getFilterGraph(Term graph) {
         return getFilterSubject(graph);
     }
 
