@@ -10,9 +10,7 @@ import be.ugent.rml.term.NamedNode;
 import be.ugent.rml.term.Term;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,7 +41,8 @@ public class RecordsFactory {
         referenceFormulationRecordFactoryMap = new ConcurrentHashMap<>();
         //referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLRecordFactory(emptyStrings));
         referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLSAXRecordFactory(emptyStrings));
-        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "JSONPath", new JSONRecordFactory(emptyStrings));
+        //referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "JSONPath", new JSONRecordFactory(emptyStrings));
+        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "JSONPath", new JSONOptRecordFactory(emptyStrings));
         referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "CSV", new CSVRecordFactory(emptyStrings));
     }
 
@@ -98,13 +97,15 @@ public class RecordsFactory {
      * @return
      */
     private List<Record> getRecordsFromCache(Access access, String referenceFormulation, String hash) {
-        if (recordCache.containsKey(access)
-                && recordCache.get(access).containsKey(referenceFormulation)
-                && recordCache.get(access).get(referenceFormulation).containsKey(hash)
-        ) {
-            return recordCache.get(access).get(referenceFormulation).get(hash);
-        } else {
-            return null;
+        synchronized (recordCache) {
+            if (recordCache.containsKey(access)
+                    && recordCache.get(access).containsKey(referenceFormulation)
+                    && recordCache.get(access).get(referenceFormulation).containsKey(hash)
+            ) {
+                return recordCache.get(access).get(referenceFormulation).get(hash);
+            } else {
+                return null;
+            }
         }
     }
 
@@ -116,15 +117,17 @@ public class RecordsFactory {
      * @param records the records that needs to be put into the cache.
      */
     private void putRecordsIntoCache(Access access, String referenceFormulation, String hash, List<Record> records) {
-        if (!recordCache.containsKey(access)) {
-            recordCache.put(access, new HashMap<>());
-        }
+        synchronized (recordCache) {
+            if (!recordCache.containsKey(access)) {
+                recordCache.put(access, new ConcurrentHashMap<>());
+            }
 
-        if (!recordCache.get(access).containsKey(referenceFormulation)) {
-            recordCache.get(access).put(referenceFormulation, new HashMap<>());
-        }
+            if (!recordCache.get(access).containsKey(referenceFormulation)) {
+                recordCache.get(access).put(referenceFormulation, new ConcurrentHashMap<>());
+            }
 
-        recordCache.get(access).get(referenceFormulation).put(hash, records);
+            recordCache.get(access).get(referenceFormulation).put(hash, records);
+        }
 
     }
 
@@ -137,7 +140,7 @@ public class RecordsFactory {
      * @return a list of records.
      * @throws IOException
      */
-    private List<Record> getRecords(Access access, Term logicalSource, String referenceFormulation, QuadStore rmlStore) throws IOException {
+    synchronized private List<Record> getRecords(Access access, Term logicalSource, String referenceFormulation, QuadStore rmlStore) throws IOException {
         String logicalSourceHash = hashLogicalSource(logicalSource, rmlStore);
 
         // Try to get the records from the cache.
@@ -184,7 +187,7 @@ public class RecordsFactory {
     }
 
     public void cleanRecordCache() {
-        recordCache = new HashMap<>();
+        recordCache = new ConcurrentHashMap<>();
     }
 
 }

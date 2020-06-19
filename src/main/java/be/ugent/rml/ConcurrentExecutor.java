@@ -290,20 +290,22 @@ public class ConcurrentExecutor implements Mapper {
     }
 
     private ProvenancedTerm getSubject(Term triplesMap, Mapping mapping, Record record, int i) throws Exception {
-        if (!this.subjectCache.containsKey(triplesMap)) {
-            this.subjectCache.put(triplesMap, new ConcurrentHashMap<Integer, ProvenancedTerm>());
-        }
-
-        if (!this.subjectCache.get(triplesMap).containsKey(i)) {
-            List<Term> nodes = mapping.getSubjectMappingInfo().getTermGenerator().generate(record);
-
-            if (!nodes.isEmpty()) {
-                //todo: only create metadata when it's required
-                this.subjectCache.get(triplesMap).put(i, new ProvenancedTerm(nodes.get(0), new Metadata(triplesMap, mapping.getSubjectMappingInfo().getTerm())));
+        synchronized (subjectCache) {
+            if (!this.subjectCache.containsKey(triplesMap)) {
+                this.subjectCache.put(triplesMap, new ConcurrentHashMap<Integer, ProvenancedTerm>());
             }
-        }
 
-        return this.subjectCache.get(triplesMap).get(i);
+            if (!this.subjectCache.get(triplesMap).containsKey(i)) {
+                List<Term> nodes = mapping.getSubjectMappingInfo().getTermGenerator().generate(record);
+
+                if (!nodes.isEmpty()) {
+                    //todo: only create metadata when it's required
+                    this.subjectCache.get(triplesMap).put(i, new ProvenancedTerm(nodes.get(0), new Metadata(triplesMap, mapping.getSubjectMappingInfo().getTerm())));
+                }
+            }
+
+            return this.subjectCache.get(triplesMap).get(i);
+        }
     }
 
     private List<ProvenancedTerm> getAllIRIs(Term triplesMap) throws Exception {
@@ -323,11 +325,13 @@ public class ConcurrentExecutor implements Mapper {
     }
 
     private List<Record> getRecords(Term triplesMap) throws IOException {
-        if (!this.recordsHolders.containsKey(triplesMap)) {
-            this.recordsHolders.put(triplesMap, this.recordsFactory.createRecords(triplesMap, this.rmlStore));
+        synchronized (recordsHolders) {
+            if (!this.recordsHolders.containsKey(triplesMap)) {
+                this.recordsHolders.put(triplesMap, this.recordsFactory.createRecords(triplesMap, this.rmlStore));
+            }
+
+            return this.recordsHolders.get(triplesMap);
         }
-        
-        return this.recordsHolders.get(triplesMap);
     }
 
     public FunctionLoader getFunctionLoader() {

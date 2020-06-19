@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FunctionLoader {
 
@@ -82,19 +83,20 @@ public class FunctionLoader {
         this.classMap.put("UtilFunctions", UtilFunctions.class);
         this.libraryMap.put("UtilFunctions", "__local");
 
-        this.loadedMethods = new HashMap<>();
+        this.loadedMethods = new ConcurrentHashMap<>();
     }
 
     public FunctionModel getFunction(Term iri) throws IOException {
         if (!this.loadedMethods.containsKey(iri.getValue())) {
-            try {
-                findMethodOldWay(iri);
-                logger.warn("Found a function using the old `lib:` way, this is deprecated");
-            } catch (IOException e) {
-                findMethodNewWay(iri);
+            synchronized (this) {
+                try {
+                    findMethodOldWay(iri);
+                    logger.warn("Found a function using the old `lib:` way, this is deprecated");
+                } catch (IOException e) {
+                    findMethodNewWay(iri);
+                }
             }
         }
-
         return this.loadedMethods.get(iri);
     }
 
