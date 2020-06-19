@@ -4,13 +4,11 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.PathNotFoundException;
-import com.jayway.jsonpath.internal.JsonContext;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This class is a record factory that creates JSON records.
@@ -38,13 +36,10 @@ public class JSONOptRecordFactory extends IteratorFormat<Object> implements Refe
                 .options(Option.ALWAYS_RETURN_LIST).build();
 
         try {
-            List<Object> list = JsonPath.using(conf).parse(document).read(iterator);
-
-            for(Object l : list) {
-                String json = Configuration.defaultConfiguration().jsonProvider().toJson(l);
-                Object record = Configuration.defaultConfiguration().jsonProvider().parse(json);
-                records.add(new JSONOptRecord(record, emptyStrings));
-            }
+            JsonPath jsonPath = JsonPath.compile(iterator);
+            List<Object> list = JsonPath.using(conf).parse(document).read(jsonPath);
+            for(Object l : list)
+                records.add(new JSONOptRecord(l, emptyStrings));
         } catch(PathNotFoundException e) {
             logger.warn(e.getMessage(), e);
         }
