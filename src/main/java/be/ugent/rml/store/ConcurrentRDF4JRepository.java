@@ -72,14 +72,12 @@ public class ConcurrentRDF4JRepository extends QuadStore {
         this.batchSize = batchSize;
         this.incremental = incremental;
         logger.info("Options [Batch Size: " + batchSize + ", Incremental: " + incremental + "]");
-        if (incremental && batchSize > 0) {
-            BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
-            executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE,
-                    KEEP_ALIVE_MINUTES, TimeUnit.MINUTES, workQueue);
-            logger.info("Executor initialized [core_pool_size: " + CORE_POOL_SIZE
-                    + ", maximum_pool_size: " + MAXIMUM_POOL_SIZE
-                    + ", keep_alive_minutes: " + KEEP_ALIVE_MINUTES + "]");
-        }
+        BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
+        executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE,
+                KEEP_ALIVE_MINUTES, TimeUnit.MINUTES, workQueue);
+        logger.info("Executor initialized [core_pool_size: " + CORE_POOL_SIZE
+                + ", maximum_pool_size: " + MAXIMUM_POOL_SIZE
+                + ", keep_alive_minutes: " + KEEP_ALIVE_MINUTES + "]");
         triplesWithGraphCounter = 0;
         numBatches = new AtomicInteger(0);
         numWrites = new AtomicInteger(0);
@@ -138,27 +136,25 @@ public class ConcurrentRDF4JRepository extends QuadStore {
         if (batchSize == 0)
             batchSize = model.size();
 
-        else {
-            Set<Statement> batch = new HashSet<>();
-            Iterator<Statement> i = model.iterator();
-            int c = 0;
-            while (i.hasNext()) {
-                batch.add(i.next());
-                i.remove();
-                if (c >= batchSize - 1 || !i.hasNext()) {
-                    final Model b = new TreeModel(batch);
-                    executor.execute(() -> {
-                        try (RepositoryConnection con = repo.getConnection()) {
-                            con.add(b);
-                            logger.info("Query completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + b.size() + "]");
-                        }
-                    });
-                    logger.info("Concurrent write to database queued [batch_num: " + numBatches.incrementAndGet() + "]");
-                    batch = new HashSet<>();
-                    c = -1;
-                }
-                c += 1;
+        Set<Statement> batch = new HashSet<>();
+        Iterator<Statement> i = model.iterator();
+        int c = 0;
+        while (i.hasNext()) {
+            batch.add(i.next());
+            i.remove();
+            if (c >= batchSize - 1 || !i.hasNext()) {
+                final Model b = new TreeModel(batch);
+                executor.execute(() -> {
+                    try (RepositoryConnection con = repo.getConnection()) {
+                        con.add(b);
+                        logger.info("Query completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + b.size() + "]");
+                    }
+                });
+                logger.info("Concurrent write to database queued [batch_num: " + numBatches.incrementAndGet() + "]");
+                batch = new HashSet<>();
+                c = -1;
             }
+            c += 1;
         }
     }
 
@@ -168,7 +164,9 @@ public class ConcurrentRDF4JRepository extends QuadStore {
      */
     @Override
     public void shutDown() {
-        writeToRepository();
+        synchronized (model) {
+            writeToRepository();
+        }
 
         if (executor != null) {
             executor.shutdown();
@@ -192,9 +190,7 @@ public class ConcurrentRDF4JRepository extends QuadStore {
     public void write(Writer out, String format) {
             switch (format) {
                 case "repo":
-                    synchronized (model) {
-                        writeToRepository();
-                    }
+                    writeToRepository();
                     break;
                 case "turtle":
                     Rio.write(model, out, RDFFormat.TURTLE);

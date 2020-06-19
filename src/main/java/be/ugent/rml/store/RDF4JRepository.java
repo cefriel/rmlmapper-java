@@ -19,32 +19,22 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.io.Writer;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RDF4JRepository extends QuadStore {
 
-    public static int CORE_POOL_SIZE = 4;
-    public static int MAXIMUM_POOL_SIZE = 5;
-    public static int KEEP_ALIVE_MINUTES = 10;
-
     private Repository repo;
+    private RepositoryConnection connection;
     private boolean shutdownRepository;
 
     private int batchSize;
     private boolean incremental;
-    private AtomicInteger numBatches;
     private AtomicInteger numWrites;
 
     private Model model;
     private int triplesWithGraphCounter;
-
-    private ThreadPoolExecutor executor;
 
     private static final Logger logger = LoggerFactory.getLogger(RDF4JRepository.class);
 
@@ -67,13 +57,12 @@ public class RDF4JRepository extends QuadStore {
             this.repo = cRepo;
         }
         model = new TreeModel();
-        BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
-        executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE,
-                KEEP_ALIVE_MINUTES, TimeUnit.MINUTES, workQueue);
+        logger.info("Options [Batch Size: " + batchSize + ", Incremental: " + incremental + "]");
         this.batchSize = batchSize;
         this.incremental = incremental;
+        if(batchSize == 0)
+            connection = repo.getConnection();
         triplesWithGraphCounter = 0;
-        numBatches = new AtomicInteger(0);
         numWrites = new AtomicInteger(0);
     }
 
@@ -89,15 +78,16 @@ public class RDF4JRepository extends QuadStore {
         Value o = getFilterObject(object);
         Resource g = getFilterGraph(graph);
 
-        synchronized (model) {
-            model.add(s, p, o); // Discarded now ,g);
-
-            if (incremental && model.size() >= batchSize)
-                writeToRepository();
-        }
-
-        if (g != null) {
-            triplesWithGraphCounter ++;
+        if (batchSize == 0) {
+            synchronized (connection) {
+                connection.add(s, p, o);
+            }
+        } else {
+            synchronized (model) {
+                model.add(s, p, o); // Discarded now ,g);
+                if (incremental && model.size() >= batchSize)
+                    writeToRepository();
+            }
         }
     }
 
@@ -130,27 +120,20 @@ public class RDF4JRepository extends QuadStore {
         if (triplesWithGraphCounter > 0)
             logger.warn("There are graphs generated. They are not supported yet.");
 
+        int size = this.batchSize;
         if (batchSize == 0)
-            batchSize = model.size();
-
+            size = model.size();
         Set<Statement> batch = new HashSet<>();
         Iterator<Statement> i = model.iterator();
         int c = 0;
-        while(i.hasNext()) {
+        while (i.hasNext()) {
             batch.add(i.next());
             i.remove();
-            if (c >= batchSize - 1 || !i.hasNext()) {
-                final Model b = new TreeModel(batch);
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        try (RepositoryConnection con = repo.getConnection()) {
-                            con.add(b);
-                            logger.info("Query completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + b.size() + "]");
-                        }
-                    }
-                });
-                logger.info("Concurrent write to database queued [batch_num: " + numBatches.incrementAndGet() + "]");
+            if (c >= size - 1 || !i.hasNext()) {
+                try (RepositoryConnection con = repo.getConnection()) {
+                    connection.add(batch);
+                }
+                logger.debug("Query completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + batch.size() + "]");
                 batch = new HashSet<>();
                 c = -1;
             }
@@ -167,12 +150,10 @@ public class RDF4JRepository extends QuadStore {
         synchronized (model) {
             writeToRepository();
         }
-        executor.shutdown();
-        try {
-            executor.awaitTermination(60, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            logger.error("Execution stopped: TIMEOUT");
-        }
+
+        if (connection != null)
+            connection.close();
+
         if (shutdownRepository)
             repo.shutDown();
     }
@@ -184,7 +165,6 @@ public class RDF4JRepository extends QuadStore {
 
     @Override
     public void write(Writer out, String format) {
-        synchronized (model) {
             switch (format) {
                 case "repo":
                     writeToRepository();
@@ -212,7 +192,6 @@ public class RDF4JRepository extends QuadStore {
                 default:
                     throw new Error("Serialization " + format + " not supported");
             }
-        }
     }
 
     @Override
