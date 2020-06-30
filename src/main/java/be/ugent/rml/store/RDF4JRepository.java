@@ -74,7 +74,6 @@ public class RDF4JRepository extends QuadStore {
         Resource s = getFilterSubject(subject);
         IRI p = getFilterPredicate(predicate);
         Value o = getFilterObject(object);
-        Resource g = getFilterGraph(graph);
 
         if (batchSize == 0) {
             synchronized (connection) {
@@ -126,7 +125,7 @@ public class RDF4JRepository extends QuadStore {
             i.remove();
             if (c >= size - 1 || !i.hasNext()) {
                 try (RepositoryConnection con = repo.getConnection()) {
-                    connection.add(batch);
+                    con.add(batch);
                 }
                 logger.debug("Query completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + batch.size() + "]");
                 batch = new HashSet<>();

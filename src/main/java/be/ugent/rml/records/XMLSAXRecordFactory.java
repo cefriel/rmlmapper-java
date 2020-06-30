@@ -47,7 +47,7 @@ public class XMLSAXRecordFactory extends IteratorFormat<TreeInfo> implements Ref
         try {
             xpFactory = XPathFactory. newInstance(NamespaceConstant.OBJECT_MODEL_SAXON);
             xpExpression = xpFactory.newXPath();
-            System.err.println("Loaded XPath Provider " + xpExpression.getClass().getName());
+            logger.info("Loaded XPath Provider " + xpExpression.getClass().getName());
             config = ((XPathFactoryImpl) xpFactory).getConfiguration();
         } catch (XPathFactoryConfigurationException e) {
             // TODO Auto-generated catch block
