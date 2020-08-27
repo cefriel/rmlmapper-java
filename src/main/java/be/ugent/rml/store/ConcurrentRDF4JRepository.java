@@ -8,43 +8,39 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConcurrentRDF4JRepository extends RDF4JRepository {
 
-    public static int CORE_POOL_SIZE = 4;
-    public static int MAXIMUM_POOL_SIZE = 5;
-    public static int KEEP_ALIVE_MINUTES = 10;
-    private ThreadPoolExecutor executor;
+    public static ExecutorService executorService;
+    public static int NUM_THREADS = 4;
 
     private AtomicInteger numBatches;
+    private ExecutorCompletionService<String> completionService;
+    private List<Future<String>> jobs;
 
     private static final Logger logger = LoggerFactory.getLogger(ConcurrentRDF4JRepository.class);
 
     public ConcurrentRDF4JRepository(String dbAddress, String repositoryID, IRI context, int batchSize, boolean incremental) {
         super(dbAddress, repositoryID, context, batchSize, incremental);
-        init(context, batchSize, incremental);
+        init();
     }
 
     public ConcurrentRDF4JRepository(Repository r, IRI context, int batchSize, boolean incremental) {
         super(r, context, batchSize, incremental);
-        init(context, batchSize, incremental);
+        init();
     }
 
-    private void init(IRI context, int batchSize, boolean incremental) {
-        BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
-        executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE,
-                KEEP_ALIVE_MINUTES, TimeUnit.MINUTES, workQueue);
-        logger.info("Executor initialized [core_pool_size: " + CORE_POOL_SIZE
-                + ", maximum_pool_size: " + MAXIMUM_POOL_SIZE
-                + ", keep_alive_minutes: " + KEEP_ALIVE_MINUTES + "]");
+    private void init() {
+        if (executorService == null) {
+            executorService = Executors.newFixedThreadPool(NUM_THREADS);
+            logger.info("ExecutorService for ConcurrentRDF4JRepository initialized [num_threads = " + NUM_THREADS + "]");
+        }
+        completionService = new ExecutorCompletionService<>(executorService);
+        jobs = new ArrayList<>();
         numBatches = new AtomicInteger(0);
     }
 
@@ -55,35 +51,23 @@ public class ConcurrentRDF4JRepository extends RDF4JRepository {
         Value o = getFilterObject(object);
 
         synchronized (model) {
-            model.add(s, p, o); // Discarded now ,g);
+            model.add(s, p, o);
             if (incremental && model.size() >= batchSize)
                 writeToRepository();
         }
     }
 
     private void writeToRepository() {
-        if (batchSize == 0)
-            batchSize = model.size();
-        Set<Statement> batch = new HashSet<>();
-        Iterator<Statement> i = model.iterator();
-        int c = 0;
-        while (i.hasNext()) {
-            batch.add(i.next());
-            i.remove();
-            if (c >= batchSize - 1 || !i.hasNext()) {
-                final Model b = new TreeModel(batch);
-                executor.execute(() -> {
-                    try (RepositoryConnection con = repo.getConnection()) {
-                        con.add(b);
-                        logger.info("Query completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + b.size() + "]");
-                    }
-                });
-                logger.info("Concurrent write to database queued [batch_num: " + numBatches.incrementAndGet() + "]");
-                batch = new HashSet<>();
-                c = -1;
+        final Model b = new TreeModel(model);
+        jobs.add(completionService.submit(() -> {
+            try (RepositoryConnection con = repo.getConnection()) {
+                con.add(b);
             }
-            c += 1;
-        }
+            return "Concurrent write completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + b.size() + "]";
+        }));
+        logger.debug("Concurrent write to database queued [batch_num: " + numBatches.incrementAndGet() + "]");
+        model = new TreeModel();
+
     }
 
     /**
@@ -96,14 +80,15 @@ public class ConcurrentRDF4JRepository extends RDF4JRepository {
             writeToRepository();
         }
 
-        if (executor != null) {
-            executor.shutdown();
+        /* wait for all tasks to complete */
+        for (Future<String> task : jobs)
             try {
-                executor.awaitTermination(60, TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                logger.error("Execution stopped: TIMEOUT");
+                String result = task.get();
+                logger.info(result);
+            } catch (InterruptedException | ExecutionException e) {
+                logger.error(e.getMessage(), e);
+                e.printStackTrace();
             }
-        }
 
         if (shutdownRepository)
             repo.shutDown();

@@ -56,10 +56,10 @@ public class RDF4JRepository extends QuadStore {
             this.repo = cRepo;
         }
         model = new TreeModel();
-        logger.info("Options [Batch Size: " + batchSize + ", Incremental: " + incremental + "]");
+        logger.debug("Options [Batch Size: " + batchSize + ", Incremental: " + incremental + "]");
         this.batchSize = batchSize;
         this.incremental = incremental;
-        if(batchSize == 0)
+        if(incremental && batchSize == 0)
             connection = repo.getConnection();
         numWrites = new AtomicInteger(0);
     }
@@ -75,7 +75,7 @@ public class RDF4JRepository extends QuadStore {
         IRI p = getFilterPredicate(predicate);
         Value o = getFilterObject(object);
 
-        if (batchSize == 0) {
+        if (incremental && batchSize == 0) {
             synchronized (connection) {
                 connection.add(s, p, o);
             }
@@ -114,25 +114,11 @@ public class RDF4JRepository extends QuadStore {
     }
 
     private void writeToRepository() {
-        int size = this.batchSize;
-        if (batchSize == 0)
-            size = model.size();
-        Set<Statement> batch = new HashSet<>();
-        Iterator<Statement> i = model.iterator();
-        int c = 0;
-        while (i.hasNext()) {
-            batch.add(i.next());
-            i.remove();
-            if (c >= size - 1 || !i.hasNext()) {
-                try (RepositoryConnection con = repo.getConnection()) {
-                    con.add(batch);
-                }
-                logger.debug("Query completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + batch.size() + "]");
-                batch = new HashSet<>();
-                c = -1;
-            }
-            c += 1;
+        try (RepositoryConnection con = repo.getConnection()) {
+            con.add(model);
         }
+        logger.debug("Query completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + model.size() + "]");
+        model = new TreeModel();
     }
 
     /**

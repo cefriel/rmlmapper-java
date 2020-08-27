@@ -46,8 +46,10 @@ public class ConcurrentExecutor implements Mapper {
     }
 
     public ConcurrentExecutor(QuadStore rmlStore, RecordsFactory recordsFactory, FunctionLoader functionLoader, QuadStore resultingQuads, String baseIRI) throws Exception {
-        if (executorService == null)
+        if (executorService == null) {
             executorService = Executors.newFixedThreadPool(NUM_THREADS);
+            logger.info("ExecutorService for ConcurrentExecutor initialized [num_threads = " + NUM_THREADS + "]");
+        }
         this.initializer = new Initializer(rmlStore, functionLoader);
         this.mappings = this.initializer.getMappings();
         this.rmlStore = rmlStore;
@@ -64,8 +66,10 @@ public class ConcurrentExecutor implements Mapper {
     }
 
     public ConcurrentExecutor(Initializer initializer, RecordsFactory recordsFactory, QuadStore resultingQuads, String baseIRI) throws Exception {
-        if (executorService == null)
+        if (executorService == null) {
             executorService = Executors.newFixedThreadPool(NUM_THREADS);
+            logger.info("ExecutorService for ConcurrentExecutor initialized [num_threads = " + NUM_THREADS + "]");
+        }
         this.initializer = initializer;
         this.mappings = this.initializer.getMappings();
         this.rmlStore = this.initializer.getRMLStore();

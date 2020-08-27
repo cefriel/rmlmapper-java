@@ -45,7 +45,7 @@ public class XMLSAXRecordFactory extends IteratorFormat<TreeInfo> implements Ref
         // Please refer to SaxonHE documentation for details
         System.setProperty("javax.xml.xpath.XPathFactory:"+ NamespaceConstant.OBJECT_MODEL_SAXON, "net.sf.saxon.xpath.XPathFactoryImpl");
         try {
-            xpFactory = XPathFactory. newInstance(NamespaceConstant.OBJECT_MODEL_SAXON);
+            xpFactory = XPathFactory.newInstance(NamespaceConstant.OBJECT_MODEL_SAXON);
             xpExpression = xpFactory.newXPath();
             logger.info("Loaded XPath Provider " + xpExpression.getClass().getName());
             config = ((XPathFactoryImpl) xpFactory).getConfiguration();
