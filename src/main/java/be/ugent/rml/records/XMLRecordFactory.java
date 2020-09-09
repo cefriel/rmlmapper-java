@@ -23,12 +23,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class XMLRecordFactory extends IteratorFormat<Document> implements ReferenceFormulationRecordFactory {
 
-    private boolean emptyStrings;
     private XPath xPath;
     private ConcurrentHashMap<String, XPathExpression> iterators_map;
     
-    public XMLRecordFactory(boolean emptyStrings) {
-        this.emptyStrings = emptyStrings;
+    public XMLRecordFactory() {
         xPath = XPathFactory.newInstance().newXPath();
         iterators_map = new ConcurrentHashMap<String, XPathExpression>();
     }
@@ -82,5 +80,10 @@ public class XMLRecordFactory extends IteratorFormat<Document> implements Refere
         }
 
         return null;
+    }
+
+    @Override
+    public void setEmptyStrings(boolean emptyStrings) {
+        this.emptyStrings = emptyStrings;
     }
 }

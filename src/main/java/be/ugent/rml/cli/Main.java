@@ -1,12 +1,16 @@
 package be.ugent.rml.cli;
 
 import be.ugent.rml.Executor;
+import be.ugent.rml.NAMESPACES;
 import be.ugent.rml.Utils;
 import be.ugent.rml.conformer.MappingConformer;
 import be.ugent.rml.functions.FunctionLoader;
 import be.ugent.rml.functions.lib.IDLabFunctions;
 import be.ugent.rml.metadata.MetadataGenerator;
+import be.ugent.rml.records.JSONOptRecordFactory;
 import be.ugent.rml.records.RecordsFactory;
+import be.ugent.rml.records.ReferenceFormulationRecordFactory;
+import be.ugent.rml.records.XMLSAXRecordFactory;
 import be.ugent.rml.store.QuadStore;
 import be.ugent.rml.store.RDF4JRepository;
 import be.ugent.rml.store.QuadStoreFactory;
@@ -135,13 +139,15 @@ public class Main {
                 .build();
         Option batchSizeOption = Option.builder("b")
                 .longOpt("batchSize")
-                .desc("Batch size, i.e., number of statements for each update to the triples store. " +
-                        "If -inc is set it is used as batch size also for incremental updates.")
+                .desc("If -inc is set it is used as batch size for incremental updates, " +
+                        "i.e., number of statements for each write, otherwise it is ignored.")
                 .hasArg()
                 .build();
         Option incrementalUpdateOption = Option.builder("inc")
                 .longOpt("incrementalUpdate")
-                .desc("Incremental update option to incrementally load triples in the database.")
+                .desc("Incremental update option to incrementally load triples in the repository while performing                                       \n" +
+                        "the mapping procedure. If -b is not set each triple generated is directly written " +
+                        "to the repository.")
                 .build();
         Option noCacheOption = Option.builder("n")
                 .longOpt("noCache")
@@ -165,6 +171,14 @@ public class Main {
         Option emptyStringsOption = Option.builder("es")
                 .longOpt("emptyStrings")
                 .desc("Set option if empty strings should be considered as values.")
+                .build();
+        Option saxOption = Option.builder("sax")
+                .longOpt("saxRecordFactory")
+                .desc("[beta] Enable Saxon parser for XPath reference formulation.")
+                .build();
+        Option jsonOptOption = Option.builder("jopt")
+                .longOpt("jsonOptRecordFactory")
+                .desc("[beta] Enable optimized parser for JSONPath reference formulation.")
                 .build();
         options.addOption(mappingdocOption);
         options.addOption(outputfileOption);
@@ -190,6 +204,8 @@ public class Main {
         options.addOption(baseIRIOption);
         options.addOption(baseIRIPrefixOption);
         options.addOption(emptyStringsOption);
+        options.addOption(saxOption);
+        options.addOption(jsonOptOption);
 
         CommandLineParser parser = new DefaultParser();
         try {
@@ -252,7 +268,12 @@ public class Main {
                     logger.error(fatal, "Failed to make mapping file conformant to RML spec.", e);
                 }
 
-                RecordsFactory factory = new RecordsFactory(basePath);
+                Map<String, ReferenceFormulationRecordFactory> map = new HashMap<>();
+                if (checkOptionPresence(saxOption, lineArgs, configFile))
+                    map.put(NAMESPACES.QL + "XPath", new XMLSAXRecordFactory());
+                if (checkOptionPresence(jsonOptOption, lineArgs, configFile))
+                    map.put(NAMESPACES.QL + "JSONPath", new JSONOptRecordFactory());
+                RecordsFactory factory = new RecordsFactory(basePath, map);
                 if (checkOptionPresence(emptyStringsOption, lineArgs, configFile))
                     factory.setEmptyStrings(true);
 

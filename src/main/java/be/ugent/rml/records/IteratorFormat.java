@@ -21,6 +21,7 @@ import java.util.List;
 public abstract class IteratorFormat<DocumentClass> implements ReferenceFormulationRecordFactory {
 
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
+    protected boolean emptyStrings;
     private HashMap<Access, DocumentClass> documentMap = new HashMap<>();
 
     /**

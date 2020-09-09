@@ -21,4 +21,6 @@ public interface ReferenceFormulationRecordFactory {
      * @throws IOException
      */
     List<Record> getRecords(Access access, Term logicalSource, QuadStore rmlStore) throws IOException;
+
+    void setEmptyStrings(boolean emptyStrings);
 }

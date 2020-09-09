@@ -24,10 +24,6 @@ public class CSVRecordFactory implements ReferenceFormulationRecordFactory {
 
     private boolean emptyStrings;
 
-    public CSVRecordFactory(boolean emptyStrings) {
-        this.emptyStrings = emptyStrings;
-    }
-
     /**
      * This method returns a list of CSV records for a data source.
      * @param access the access from which records need to be fetched.
@@ -70,6 +66,11 @@ public class CSVRecordFactory implements ReferenceFormulationRecordFactory {
             // but you don't want the RMLMapper to crash.
             return new ArrayList<>();
         }
+    }
+
+    @Override
+    public void setEmptyStrings(boolean emptyStrings) {
+        this.emptyStrings = emptyStrings;
     }
 
     /**

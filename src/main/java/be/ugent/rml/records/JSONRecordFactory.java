@@ -15,12 +15,6 @@ import java.util.List;
  */
 public class JSONRecordFactory extends IteratorFormat<Object> implements ReferenceFormulationRecordFactory {
 
-    private boolean emptyStrings;
-
-    public JSONRecordFactory(boolean emptyStrings) {
-        this.emptyStrings = emptyStrings;
-    }
-
     /**
      * This method returns the records from a JSON document based on an iterator.
      * @param document the document from which records need to get.
@@ -57,5 +51,10 @@ public class JSONRecordFactory extends IteratorFormat<Object> implements Referen
     @Override
     Object getDocumentFromStream(InputStream stream) throws IOException {
         return Configuration.defaultConfiguration().jsonProvider().parse(stream, "utf-8");
+    }
+
+    @Override
+    public void setEmptyStrings(boolean emptyStrings) {
+        this.emptyStrings = emptyStrings;
     }
 }

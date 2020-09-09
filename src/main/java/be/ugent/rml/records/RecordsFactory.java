@@ -1,5 +1,6 @@
 package be.ugent.rml.records;
 
+import be.ugent.rml.Executor;
 import be.ugent.rml.NAMESPACES;
 import be.ugent.rml.Utils;
 import be.ugent.rml.access.Access;
@@ -8,6 +9,8 @@ import be.ugent.rml.store.Quad;
 import be.ugent.rml.store.QuadStore;
 import be.ugent.rml.term.NamedNode;
 import be.ugent.rml.term.Term;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,34 +23,53 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RecordsFactory {
 
+    private static final Logger logger = LoggerFactory.getLogger(RecordsFactory.class);
+
     private Map<Access, Map<String, Map<String, List<Record>>>> recordCache;
     private AccessFactory accessFactory;
     private Map<String, ReferenceFormulationRecordFactory> referenceFormulationRecordFactoryMap;
-    private boolean emptyStrings = false;
 
     public RecordsFactory(String basePath) {
-        accessFactory = new AccessFactory(basePath);
-        init();
+        this(basePath, null);
     }
 
     public RecordsFactory(AccessFactory accessFactory) {
-        this.accessFactory = accessFactory;
-        init();
+        this(accessFactory, null);
     }
 
-    private void init() {
-        recordCache = new ConcurrentHashMap<>();
+    public RecordsFactory(String basePath,
+                          Map<String, ReferenceFormulationRecordFactory> map) {
+        accessFactory = new AccessFactory(basePath);
+        init(map);
+    }
 
-        referenceFormulationRecordFactoryMap = new ConcurrentHashMap<>();
-        //referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLRecordFactory(emptyStrings));
-        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLSAXRecordFactory(emptyStrings));
-        //referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "JSONPath", new JSONRecordFactory(emptyStrings));
-        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "JSONPath", new JSONOptRecordFactory(emptyStrings));
-        referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "CSV", new CSVRecordFactory(emptyStrings));
+    public RecordsFactory(AccessFactory accessFactory,
+                          Map<String, ReferenceFormulationRecordFactory> map) {
+        this.accessFactory = accessFactory;
+        init(map);
+    }
+
+    private void init(Map<String, ReferenceFormulationRecordFactory> map) {
+        recordCache = new ConcurrentHashMap<>();
+        if (map == null)
+            referenceFormulationRecordFactoryMap = new ConcurrentHashMap<>();
+        else
+            referenceFormulationRecordFactoryMap = new ConcurrentHashMap<>(map);
+        if(referenceFormulationRecordFactoryMap.get(NAMESPACES.QL + "XPath") == null)
+            referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "XPath", new XMLRecordFactory());
+        if(referenceFormulationRecordFactoryMap.get(NAMESPACES.QL + "JSONPath") == null)
+            referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "JSONPath", new JSONRecordFactory());
+        if(referenceFormulationRecordFactoryMap.get(NAMESPACES.QL + "CSV") == null)
+            referenceFormulationRecordFactoryMap.put(NAMESPACES.QL + "CSV", new CSVRecordFactory());
+
+        for(String key : referenceFormulationRecordFactoryMap.keySet())
+            logger.info("Reference Formulation implementation [key: " + key.replaceAll(NAMESPACES.QL, "") +
+                    ", " + referenceFormulationRecordFactoryMap.get(key).getClass().getCanonicalName() + "]");
     }
 
     public void setEmptyStrings(boolean emptyStrings) {
-        this.emptyStrings = emptyStrings;
+        for(String key : referenceFormulationRecordFactoryMap.keySet())
+            referenceFormulationRecordFactoryMap.get(key).setEmptyStrings(emptyStrings);
     }
 
     /**

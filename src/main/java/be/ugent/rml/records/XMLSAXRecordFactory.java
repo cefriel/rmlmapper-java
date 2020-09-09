@@ -31,14 +31,12 @@ import net.sf.saxon.xpath.XPathFactoryImpl;
  */
 public class XMLSAXRecordFactory extends IteratorFormat<TreeInfo> implements ReferenceFormulationRecordFactory {
 
-    private boolean emptyStrings;
     private XPath xpExpression;
     private ConcurrentHashMap<String, XPathExpression> iterators_map;
     private Configuration config;
     private XPathFactory xpFactory; 
     
-    public XMLSAXRecordFactory(boolean emptyStrings) {
-        this.emptyStrings = emptyStrings;
+    public XMLSAXRecordFactory() {
         iterators_map = new ConcurrentHashMap<String, XPathExpression>();
 
         // The following initialization code is specific to Saxon
@@ -109,5 +107,10 @@ public class XMLSAXRecordFactory extends IteratorFormat<TreeInfo> implements Ref
         }
 
         return null;
+    }
+
+    @Override
+    public void setEmptyStrings(boolean emptyStrings) {
+        this.emptyStrings = emptyStrings;
     }
 }
