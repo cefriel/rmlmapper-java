@@ -39,8 +39,8 @@ Given this information, we implemented a set of options to optimize performances
 We offer alternative implementations of parsing procedures for JSON and XML files. For JSON, we added caches to optimize the compilation of paths and the retrieval. For XML, we changed the implementation using Saxon-HE that guarantees huge improvements in memory consumption and time required to process XPath expressions.  
 
 New options:
- - `--sax` Enable Saxon parser for XPath reference formulation.
- - `--jopt`Enable optimized parser for JSONPath reference formulation.
+ - `-sax` Enable Saxon parser for XPath reference formulation.
+ - `-jopt`Enable optimized parser for JSONPath reference formulation.
 
 ##### Incremental Writes #####
 If a Triple Store is used as output store some additional options can help improve performances. In case of huge materialized knowledge graphs, to reduce memory consumption and to avoid flooding the triple store with a unique insert query, we created options to manage batch-size updates to the repository each time the number of triples generated reaches the batch-size. Activating this option, triples written to the triple store are discarded once completed the query removing data from memory. Duplicates elimination is guaranteed and demanded to the triple store. Requests to the Triple Store can be done in multithreading, to avoid stopping the mapping procedure, with the `ConcurrentRDF4JRepository` class (currently this approach is not available through CLI options).
@@ -68,22 +68,27 @@ This is the intended usage of the `rmlmapper-cefriel.jar`.
 ```
 usage: java -jar rmlmapper-cefriel.jar <options>
 options:
- -b,--batchSize <arg>             If -inc is set it is used as batch size for incremental updates, i.e., number of statements for each write, otherwise it is ignored.
+ -b,--batchSize <arg>             If -inc is set it is used as batch size for incremental updates, i.e., 
+                                  number of statements for each write, otherwise it is ignored.
  -ctx,--context <arg>             IRI identifying named graph for triples generated.
  -es,--emptyStrings               Set option if empty strings should be considered as values.
- -f,--functionfile <arg>          Path to functions.ttl file (dynamic functions are found relative to functions.ttl)
- -inc,--incrementalUpdate         Incremental update option to incrementally load triples in the repository while performing                                       
-                                  the mapping procedure. If -b is not set each triple generated is directly written to the repository.
+ -f,--functionfile <arg>          Path to functions.ttl file (dynamic functions are found relative to functions.ttl).
+ -jopt,--jsonOptRecordFactory     Enable optimized parser for JSONPath reference formulation.
+ -inc,--incrementalUpdate         Incremental update option to incrementally load triples in the repository 
+                                  while performing the mapping procedure. If -b is not set each triple 
+                                  generated is directly written to the repository.
  -iri,--baseIRI <arg>             Specify a base IRI for relative IRIs. Otherwise @base is parsed.
- -m,--mappingfile <arg>           One or more mapping file paths and/or strings (multiple values are concatenated)
+ -m,--mappingfile <arg>           One or more mapping file paths and/or strings (multiple values are concatenated).
  -n,--noCache                     Do not use subjects and records caches in the executor. 
- -ord,--ordered                   Mapping execution is ordered by logical source and caches are cleaned after each logical source.
- -o,--outputfile <arg>            Path to output file (-o stdout can be used for debugging)
- -pb,--prefixBaseIRI <arg>        Specify a prefix for the base IRI used for relative IRIs
+ -ord,--ordered                   Mapping execution is ordered by logical source and caches are cleaned 
+                                  after each logical source.
+ -o,--outputfile <arg>            Path to output file (-o stdout can be used for debugging).
+ -pb,--prefixBaseIRI <arg>        Specify a prefix for the base IRI used for relative IRIs.
  -r,--repositoryId <arg>          Repository Id related to the triples store. Also option -ts
-                                  should be provided
- -s,--serialization <arg>         Serialization format (nquads (default), turtle, trig, trix, jsonld, hdt)
+                                  should be provided.
+ -sax,--saxRecordFactory          Enable Saxon parser for XPath reference formulation.
+ -s,--serialization <arg>         Serialization format (nquads (default), turtle, trig, trix, jsonld, hdt).
  -ts,--triplesStore <arg>         Address to reach the triples store. If specified produced triples are also
-                                  written at this address. Also option -r should be provided
- -v,--verbose                     Show more details in debugging output
+                                  written at this address. Also option -r should be provided.
+ -v,--verbose                     Show more details in debugging output.
  ```
