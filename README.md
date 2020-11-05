@@ -35,6 +35,13 @@ When the conversion is applied to huge datasets the bottleneck is often mainly r
 
 Given this information, we implemented a set of options to optimize performances of the lifting procedure in specific cases.
 
+#### Optimized JSON and XML files access ####
+We offer alternative implementations of parsing procedures for JSON and XML files. For JSON, we added caches to optimize the compilation of paths and the retrieval. For XML, we changed the implementation using Saxon-HE that guarantees huge improvements in memory consumption and time required to process XPath expressions.  
+
+New options:
+ - `--sax` Enable Saxon parser for XPath reference formulation.
+ - `--jopt`Enable optimized parser for JSONPath reference formulation.
+
 ##### Incremental Writes #####
 If a Triple Store is used as output store some additional options can help improve performances. In case of huge materialized knowledge graphs, to reduce memory consumption and to avoid flooding the triple store with a unique insert query, we created options to manage batch-size updates to the repository each time the number of triples generated reaches the batch-size. Activating this option, triples written to the triple store are discarded once completed the query removing data from memory. Duplicates elimination is guaranteed and demanded to the triple store. Requests to the Triple Store can be done in multithreading, to avoid stopping the mapping procedure, with the `ConcurrentRDF4JRepository` class (currently this approach is not available through CLI options).
 
