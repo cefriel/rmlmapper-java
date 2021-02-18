@@ -74,14 +74,15 @@ public class RDF4JRepository extends QuadStore {
         Resource s = getFilterSubject(subject);
         IRI p = getFilterPredicate(predicate);
         Value o = getFilterObject(object);
+        Resource g = getFilterGraph(graph);
 
         if (incremental && batchSize == 0) {
             synchronized (connection) {
-                connection.add(s, p, o);
+                connection.add(s, p, o, g);
             }
         } else {
             synchronized (model) {
-                model.add(s, p, o); // Discarded now ,g);
+                model.add(s, p, o, g); // Discarded now ,g);
                 if (incremental && model.size() >= batchSize)
                     writeToRepository();
             }

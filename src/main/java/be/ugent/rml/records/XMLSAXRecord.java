@@ -10,6 +10,8 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 
 import net.sf.saxon.om.NodeInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is a specific implementation of a record for XML.
@@ -61,7 +63,7 @@ public class XMLSAXRecord extends Record {
             }
 
         } catch (XPathExpressionException e) {
-            e.printStackTrace();
+            logger.warn(e.getMessage(), e);
         }
 
         return results;

@@ -15,8 +15,6 @@ import java.util.List;
  */
 public class JSONOptRecord extends Record {
 
-    protected Logger logger = LoggerFactory.getLogger(this.getClass());
-
     private Object document;
     private boolean emptyStrings;
 

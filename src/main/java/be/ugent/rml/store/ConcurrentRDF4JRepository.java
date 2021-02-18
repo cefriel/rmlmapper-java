@@ -49,9 +49,10 @@ public class ConcurrentRDF4JRepository extends RDF4JRepository {
         Resource s = getFilterSubject(subject);
         IRI p = getFilterPredicate(predicate);
         Value o = getFilterObject(object);
+        Resource g = getFilterGraph(graph);
 
         synchronized (model) {
-            model.add(s, p, o);
+            model.add(s, p, o, g);
             if (incremental && model.size() >= batchSize)
                 writeToRepository();
         }

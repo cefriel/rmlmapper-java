@@ -1,11 +1,16 @@
 package be.ugent.rml.records;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
 /**
  * This class represents a generic record in a data source.
  */
 public abstract class Record {
+
+    protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
      * This method returns the objects for a reference in the record.

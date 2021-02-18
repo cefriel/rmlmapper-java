@@ -51,7 +51,7 @@ public class CSVRecord extends Record {
             if (!obj.equals("") || emptyStrings)
                 result.add(obj);
         } catch (Exception e) {
-            return result;
+            logger.warn(e.getMessage(), e);
         }
 
         return result;
