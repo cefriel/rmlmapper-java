@@ -30,6 +30,8 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -439,6 +441,7 @@ public class Main {
 
                 } catch (Exception e) {
                     logger.error(e.getMessage());
+                    e.printStackTrace();
                 }
             }
         } catch (ParseException exp) {
@@ -447,6 +450,7 @@ public class Main {
             printHelp(options);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
+            e.printStackTrace();
         }
     }
 
@@ -529,7 +533,7 @@ public class Main {
 
             //if output file provided, write to triples output file
             if (outputFile == null || outputFile.equals("stdout")) {
-                out = new BufferedWriter(new OutputStreamWriter(System.out));
+                out = new BufferedWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
             } else {
                 targetFile = new File(outputFile);
                 logger.info("Writing quads to " + targetFile.getPath() + "...");
@@ -540,7 +544,7 @@ public class Main {
 
                 doneMessage = "Writing to " + targetFile.getPath() + " is done.";
 
-                out = new BufferedWriter(new FileWriter(targetFile));
+                out = Files.newBufferedWriter(targetFile.toPath(), StandardCharsets.UTF_8);
             }
 
             store.write(out, format);
