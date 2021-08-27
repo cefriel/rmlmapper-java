@@ -40,7 +40,7 @@ public class RDF4JStore extends QuadStore {
 
     @Override
     public void removeDuplicates() {
-        throw new UnsupportedOperationException("Method not implemented.");
+        logger.warn("Duplicated triples automatically removed by the repository.");
     }
 
     @Override
