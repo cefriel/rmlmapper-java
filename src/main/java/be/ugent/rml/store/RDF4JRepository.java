@@ -82,7 +82,7 @@ public class RDF4JRepository extends QuadStore {
             }
         } else {
             synchronized (model) {
-                model.add(s, p, o, g); // Discarded now ,g);
+                model.add(s, p, o, g);
                 if (incremental && model.size() >= batchSize)
                     writeToRepository();
             }

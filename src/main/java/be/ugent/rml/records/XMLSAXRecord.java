@@ -56,7 +56,6 @@ public class XMLSAXRecord extends Record {
                 for (int i = 0; i < count; i++) {
                     NodeInfo cNode = (NodeInfo) result.get(i);
                     String os = cNode.getStringValue();
-                    //System.out.println("Result: "+os);
                     if (!os.equals("") || emptyStrings)
                         results.add(os);
                 }
@@ -65,7 +64,7 @@ public class XMLSAXRecord extends Record {
         } catch (XPathExpressionException e) {
             logger.warn(e.getMessage(), e);
         }
-
+        logger.debug("Value: " + value + " Results: " + results.size());
         return results;
     }
 }

@@ -15,7 +15,10 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathFactoryConfigurationException;
 
+import net.sf.saxon.s9api.UnprefixedElementMatchingPolicy;
+import net.sf.saxon.xpath.XPathEvaluator;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import net.sf.saxon.Configuration;
@@ -34,24 +37,22 @@ public class XMLSAXRecordFactory extends IteratorFormat<TreeInfo> implements Ref
     private XPath xpExpression;
     private ConcurrentHashMap<String, XPathExpression> iterators_map;
     private Configuration config;
-    private XPathFactory xpFactory; 
-    
+
     public XMLSAXRecordFactory() {
         iterators_map = new ConcurrentHashMap<String, XPathExpression>();
-
         // The following initialization code is specific to Saxon
-        // Please refer to SaxonHE documentation for details
         System.setProperty("javax.xml.xpath.XPathFactory:"+ NamespaceConstant.OBJECT_MODEL_SAXON, "net.sf.saxon.xpath.XPathFactoryImpl");
         try {
-            xpFactory = XPathFactory.newInstance(NamespaceConstant.OBJECT_MODEL_SAXON);
+            XPathFactory xpFactory = XPathFactory.newInstance(NamespaceConstant.OBJECT_MODEL_SAXON);
             xpExpression = xpFactory.newXPath();
+            ((XPathEvaluator)xpExpression).getStaticContext()
+                    .setUnprefixedElementMatchingPolicy(UnprefixedElementMatchingPolicy.ANY_NAMESPACE);
             logger.info("Loaded XPath Provider " + xpExpression.getClass().getName());
             config = ((XPathFactoryImpl) xpFactory).getConfiguration();
         } catch (XPathFactoryConfigurationException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        // End Saxon specific code
     }
 
     /**
@@ -72,7 +73,7 @@ public class XMLSAXRecordFactory extends IteratorFormat<TreeInfo> implements Ref
                 expr = xpExpression.compile(iterator);
                 iterators_map.put(iterator, expr);
             }
-           
+
             ArrayList<Node> result = (ArrayList<Node>) expr.evaluate(document, XPathConstants.NODESET);
 
             ListIterator<Node> it = result.listIterator();
@@ -83,7 +84,7 @@ public class XMLSAXRecordFactory extends IteratorFormat<TreeInfo> implements Ref
         } catch (XPathExpressionException e) {
             e.printStackTrace();
         }
-
+        logger.debug("Iterator: " + iterator + " Results: " + records.size());
         return records;
     }
 
