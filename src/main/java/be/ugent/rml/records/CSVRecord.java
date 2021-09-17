@@ -46,12 +46,16 @@ public class CSVRecord extends Record {
         List<Object> result = new ArrayList<>();
         Object obj;
 
-        try {
-            obj = this.record.get(value);
-            if (!obj.equals("") || emptyStrings)
-                result.add(obj);
-        } catch (Exception e) {
-            logger.warn(e.getMessage(), e);
+        if (this.record.isMapped(value)) {
+            try {
+                obj = this.record.get(value);
+                if (!obj.equals("") || emptyStrings)
+                    result.add(obj);
+            } catch (Exception e) {
+                logger.warn(e.getMessage(), e);
+            }
+        } else {
+            logger.warn("Column " + value + " not found.");
         }
 
         return result;
