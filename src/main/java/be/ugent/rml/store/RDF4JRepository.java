@@ -116,7 +116,17 @@ public class RDF4JRepository extends QuadStore {
 
     private void writeToRepository() {
         try (RepositoryConnection con = repo.getConnection()) {
-            con.add(model);
+            // todo rdf4j 4.2.2 bug, usage of ContextAwareRepository and this particular add method causes stackoverflow
+            // con.add(model);
+
+            for (Statement st : model.getStatements(null,null,null))
+            {
+                con.add(st);
+            }
+
+            for (Namespace ns : model.getNamespaces()) {
+                con.setNamespace(ns.getPrefix(), ns.getName());
+            }
         }
         logger.debug("Query completed! [query_num: " + numWrites.incrementAndGet() + ", size: " + model.size() + "]");
         model = new TreeModel();
