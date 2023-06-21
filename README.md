@@ -1,6 +1,6 @@
 # RML Mapper - Cefriel fork
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.cefriel/rmlmapper.svg?label=Maven%20Central)](https://search.maven.org/artifact/com.cefriel/rmlmapper)![image](https://github.com/cefriel/rmlmapper-cefriel/assets/5709852/cb9b2cdf-c944-48d5-849d-714fa38e6837)
+[![Maven Central](https://img.shields.io/maven-central/v/com.cefriel/rmlmapper.svg?label=Maven%20Central)](https://search.maven.org/artifact/com.cefriel/rmlmapper)
 
 
 This repository contains a fork of the [RMLio/rmlmapper-java](https://github.com/RMLio/rmlmapper-java) repository maintained by Cefriel as a building block of the [Chimera](https://github.com/cefriel/chimera) solution for semantic data conversion.
