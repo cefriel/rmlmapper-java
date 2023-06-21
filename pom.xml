@@ -17,6 +17,27 @@
         </license>
     </licenses>
 
+    <developers>
+        <developer>
+            <name>Mario Scrocca</name>
+            <email>mario.scrocca@cefriel.com</email>
+            <organization>Cefriel</organization>
+            <organizationUrl>https://www.cefriel.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Marco Grassi</name>
+            <email>marco.grassi@cefriel.com</email>
+            <organization>Cefriel</organization>
+            <organizationUrl>https://www.cefriel.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Alessio Carenini</name>
+            <email>alessio.carenini@cefriel.com</email>
+            <organization>Cefriel</organization>
+            <organizationUrl>https://www.cefriel.com/</organizationUrl>
+        </developer>
+    </developers>
+
     <scm>
         <connection>scm:git:ssh://git@github.com:cefriel/rmlmapper-cefriel.git</connection>
         <url>https://github.com/cefriel/rmlmapper-cefriel</url>
@@ -116,6 +137,7 @@
             <groupId>com.spotify</groupId>
             <artifactId>docker-client</artifactId>
             <version>8.15.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
