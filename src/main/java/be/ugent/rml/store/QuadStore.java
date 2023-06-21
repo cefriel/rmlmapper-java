@@ -319,7 +319,7 @@ public abstract class QuadStore {
         Collections.sort(quads);
 
         for (Quad q : quads) {
-            output.append(q.getSubject()).append(" ").append(q.getPredicate()).append(" ").append(q.getObject()).append(" ").append(q.getGraph()).append("\n");
+            output.append(q.getSubject().getValue()).append(" ").append(q.getPredicate().getValue()).append(" ").append(q.getObject().getValue()).append(" ").append(q.getGraph()).append("\n");
         }
 
         return output.toString();
