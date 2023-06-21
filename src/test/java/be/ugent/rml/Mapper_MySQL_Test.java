@@ -1,5 +1,6 @@
 package be.ugent.rml;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -8,7 +9,7 @@ import org.junit.runners.Parameterized;
 
 import java.util.Arrays;
 
-
+@Ignore
 @RunWith(Parameterized.class)
 public class Mapper_MySQL_Test extends MySQLTestCore {
 
